@@ -1,0 +1,46 @@
+{
+  "fullName": "Demo Candidate",
+  "firstName": "Demo",
+  "lastName": "Candidate",
+  "email": "demo.candidate@example.com",
+  "phone": "+33000000000",
+  "addressLine1": "",
+  "addressLine2": null,
+  "city": "Paris",
+  "postalCode": "75000",
+  "region": "Île-de-France",
+  "country": "France",
+  "countryCode": "FR",
+  "currentJobTitle": "Senior Software Developer",
+  "mobility": "France",
+  "preferredLocations": [
+    "France"
+  ],
+  "workAuthorisation": "Autorisé à travailler en France",
+  "availability": "Immédiatement",
+  "noticePeriod": "Aucun préavis",
+  "yearsOfExperience": 8,
+  "technologyExperience": {},
+  "languages": [
+    {
+      "language": "Français",
+      "level": "Courant"
+    },
+    {
+      "language": "Anglais",
+      "level": "Professionnel"
+    }
+  ],
+  "acceptedContracts": [
+    "CDI",
+    "CDD",
+    "Freelance"
+  ],
+  "workModePreference": "Aucune préférence",
+  "desiredSalary": null,
+  "desiredTjm": null,
+  "linkedinUrl": null,
+  "githubUrl": null,
+  "portfolioUrl": null,
+  "professionalUrls": []
+}

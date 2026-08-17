@@ -1,0 +1,552 @@
+.card {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+  border: 1px solid #dfe4ee;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(31, 45, 74, .06);
+}
+
+.offerHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #edf0f5;
+}
+
+.titleBlock {
+  min-width: 0;
+}
+
+.eyebrow {
+  color: #4665d8;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.titleBlock h2 {
+  margin: 5px 0 8px;
+  color: #172033;
+  font-size: clamp(24px, 2.4vw, 34px);
+  line-height: 1.12;
+  letter-spacing: -.02em;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px 14px;
+  color: #687386;
+  font-size: 12px;
+}
+
+.meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.meta span + span::before {
+  content: '·';
+  color: #c0c7d2;
+  margin-right: 7px;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
+  max-width: 360px;
+}
+
+.actionsPanel {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 13px;
+  border: 1px solid #e3e7ef;
+  border-radius: 12px;
+  background: #f9fafc;
+}
+
+.quickActions,
+.statusActions {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.statusControl {
+  display: grid;
+  gap: 5px;
+  min-width: 190px;
+  color: #687386;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.statusControl select {
+  min-height: 34px;
+}
+
+.feedback {
+  margin: -3px 0 0;
+}
+
+.mission,
+.scorePanel,
+.applicationSummary {
+  display: grid;
+  gap: 13px;
+  padding: 18px 20px;
+  border: 1px solid #e2e6ed;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.sectionHeader,
+.scoreHeader,
+.applicationSummaryHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.sectionTitleBlock {
+  min-width: 0;
+}
+
+.sectionTitleBlock h3,
+.scoreHeader h3,
+.applicationSummaryHeader h3 {
+  margin: 3px 0 0;
+  color: #202b3c;
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.mission {
+  background: #fbfcfe;
+  border-color: #dce3ee;
+}
+
+.descriptionViewport {
+  position: relative;
+  overflow: hidden;
+}
+
+.descriptionViewportCollapsed {
+  max-height: 390px;
+}
+
+.descriptionViewportCollapsed::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 72px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(251, 252, 254, 0), #fbfcfe 82%);
+}
+
+.description {
+  margin: 0;
+  color: #354056;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.74;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.expandButton {
+  justify-self: start;
+  border: 0;
+  background: transparent;
+  color: #365dcc;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.expandButton:hover {
+  text-decoration: underline;
+}
+
+.scorePanel {
+  grid-template-columns: minmax(190px, 270px) minmax(0, 1fr);
+  align-items: start;
+  background: #f7f8ff;
+  border-color: #e2e4f5;
+}
+
+.scorePanelLow {
+  background: #fffaf1;
+  border-color: #f1dfb7;
+}
+
+.scoreSummary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.scoreValue {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  flex: 0 0 auto;
+  border-radius: 18px;
+  background: #e8edff;
+  color: #365dcc;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.scorePanelLow .scoreValue {
+  background: #fff0d4;
+  color: #9b5d00;
+}
+
+.lowMatchHint {
+  max-width: 220px;
+  margin-top: 5px;
+  color: #8b630f;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.scoreReasons {
+  margin: 0;
+  padding-left: 18px;
+  color: #455066;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.scoreReasons li + li {
+  margin-top: 4px;
+}
+
+.applicationSummary {
+  gap: 12px;
+  background: #fbfcfe;
+}
+
+.applicationSummaryHeader {
+  align-items: center;
+}
+
+.letterLength,
+.characterCount {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #eef1ff;
+  color: #4059bd;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.motivationMessage {
+  display: grid;
+  gap: 10px;
+  padding: 13px 14px;
+  border: 1px solid #dfe5f0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.motivationMessageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.motivationMessageHeader > div {
+  display: grid;
+  gap: 3px;
+}
+
+.motivationMessageHeader strong {
+  color: #263248;
+  font-size: 13px;
+}
+
+.motivationMessageHeader > div > span {
+  color: #7a8494;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.characterCountWarning {
+  background: #fff0d4;
+  color: #8b5a00;
+}
+
+.motivationMessageText {
+  max-height: 140px;
+  overflow: auto;
+  padding: 11px 12px;
+  border-radius: 9px;
+  background: #f7f9fc;
+  color: #354056;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.motivationControls {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.characterLimitControl {
+  display: grid;
+  gap: 4px;
+  color: #687386;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.characterLimitInput {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #7a8494;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.characterLimitInput input {
+  width: 95px;
+  min-height: 34px;
+  padding: 5px 8px;
+}
+
+.characterWarning {
+  color: #8b630f;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.applicationContent {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.applicationDocuments {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  flex: 1 1 auto;
+  gap: 9px;
+}
+
+.applicationDocument {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 9px 11px;
+  border: 1px solid #e6eaf1;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.applicationDocument span {
+  color: #7a8494;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.applicationDocument strong {
+  overflow: hidden;
+  color: #2c384d;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.applicationActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+}
+
+.downloadMenu {
+  position: relative;
+}
+
+.downloadMenu summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+}
+
+.downloadMenu summary::-webkit-details-marker {
+  display: none;
+}
+
+.downloadMenu summary::after {
+  content: ' ▾';
+}
+
+.downloadOptions {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 7px);
+  z-index: 10;
+  display: grid;
+  min-width: 150px;
+  padding: 6px;
+  border: 1px solid #dce1e9;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, .14);
+}
+
+.downloadOptions a {
+  padding: 8px 10px;
+  border-radius: 7px;
+  color: #27344a;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.downloadOptions a:hover {
+  background: #f4f6fb;
+}
+
+@media (max-width: 1050px) {
+  .applicationContent {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .applicationActions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 900px) {
+  .offerHeader {
+    grid-template-columns: 1fr;
+  }
+
+  .badges {
+    justify-content: flex-start;
+    max-width: none;
+  }
+
+  .actionsPanel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .scorePanel {
+    grid-template-columns: 1fr;
+  }
+
+  .applicationDocuments {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .card {
+    gap: 13px;
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .titleBlock h2 {
+    font-size: 24px;
+  }
+
+  .meta {
+    display: grid;
+    gap: 5px;
+  }
+
+  .meta span + span::before {
+    display: none;
+  }
+
+  .sectionHeader,
+  .applicationSummaryHeader,
+  .motivationMessageHeader {
+    display: grid;
+  }
+
+  .statusControl {
+    min-width: 100%;
+  }
+
+  .descriptionViewportCollapsed {
+    max-height: 330px;
+  }
+
+  .letterLength,
+  .characterCount {
+    justify-self: start;
+  }
+
+  .motivationControls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .characterLimitControl {
+    grid-column: 1 / -1;
+  }
+
+  .motivationControls :global(.btn) {
+    width: 100%;
+  }
+
+  .applicationActions {
+    width: 100%;
+  }
+
+  .applicationActions :global(.btn),
+  .downloadMenu {
+    flex: 1 1 auto;
+  }
+
+  .downloadMenu summary {
+    justify-content: center;
+  }
+
+  .downloadOptions {
+    right: auto;
+    left: 0;
+    width: 100%;
+  }
+}

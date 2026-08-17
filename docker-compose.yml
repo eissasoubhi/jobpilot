@@ -1,0 +1,185 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-jobpilot}
+      POSTGRES_USER: ${POSTGRES_USER:-jobpilot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jobpilot}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jobpilot} -d ${POSTGRES_DB:-jobpilot}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - jobpilot_db:/var/lib/postgresql/data
+
+  browser-worker:
+    build:
+      context: ./browser-worker
+    init: true
+    restart: unless-stopped
+    environment:
+      BROWSER_WORKER_HOST: 0.0.0.0
+      BROWSER_WORKER_PORT: 3100
+      JOBPILOT_BROWSER_WORKER_TOKEN: ${JOBPILOT_BROWSER_WORKER_TOKEN:-jobpilot-local-browser-worker-token-change-me}
+    expose:
+      - "3100"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3100/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
+    read_only: true
+    tmpfs:
+      - /tmp:size=536870912,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    shm_size: 512mb
+
+  api:
+    build:
+      context: ./api
+    entrypoint: ["sh", "./docker-entrypoint.sh"]
+    environment:
+      APP_ENV: dev
+      APP_DEBUG: 1
+      APP_SECRET: ${APP_SECRET:-change-me}
+      APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:-}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-jobpilot}:${POSTGRES_PASSWORD:-jobpilot}@db:5432/${POSTGRES_DB:-jobpilot}?serverVersion=17&charset=utf8
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:8080/api/integrations/gmail/callback}
+      WEB_URL: ${WEB_URL:-http://localhost:3000}
+      GMAIL_SEARCH_QUERY: "${GMAIL_SEARCH_QUERY:-(job OR emploi OR offre OR mission OR candidature OR application OR recruiter OR entretien) newer_than:30d}"
+      GMAIL_MAX_RESULTS: ${GMAIL_MAX_RESULTS:-100}
+      GMAIL_MAX_PAGES: ${GMAIL_MAX_PAGES:-3}
+      ADZUNA_APP_ID: ${ADZUNA_APP_ID:-}
+      ADZUNA_APP_KEY: ${ADZUNA_APP_KEY:-}
+      ADZUNA_COUNTRY: ${ADZUNA_COUNTRY:-fr}
+      ADZUNA_WHERE: ${ADZUNA_WHERE:-}
+      ADZUNA_RESULTS_PER_QUERY: ${ADZUNA_RESULTS_PER_QUERY:-20}
+      FRANCE_TRAVAIL_CLIENT_ID: ${FRANCE_TRAVAIL_CLIENT_ID:-}
+      FRANCE_TRAVAIL_CLIENT_SECRET: ${FRANCE_TRAVAIL_CLIENT_SECRET:-}
+      FRANCE_TRAVAIL_SCOPE: "${FRANCE_TRAVAIL_SCOPE:-api_offresdemploiv2 o2dsoffre}"
+      FRANCE_TRAVAIL_TOKEN_ENDPOINT: ${FRANCE_TRAVAIL_TOKEN_ENDPOINT:-https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=/partenaire}
+      FRANCE_TRAVAIL_SEARCH_ENDPOINT: ${FRANCE_TRAVAIL_SEARCH_ENDPOINT:-https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search}
+      FRANCE_TRAVAIL_RESULTS_PER_QUERY: ${FRANCE_TRAVAIL_RESULTS_PER_QUERY:-50}
+      SMARTRECRUITERS_API_TOKEN: ${SMARTRECRUITERS_API_TOKEN:-}
+      SMARTRECRUITERS_COMPANY_IDENTIFIERS: ${SMARTRECRUITERS_COMPANY_IDENTIFIERS:-}
+      SMARTRECRUITERS_PAGES: ${SMARTRECRUITERS_PAGES:-1}
+      SMARTRECRUITERS_RESULTS_PER_PAGE: ${SMARTRECRUITERS_RESULTS_PER_PAGE:-100}
+      SMARTRECRUITERS_MAX_DETAILS: ${SMARTRECRUITERS_MAX_DETAILS:-20}
+      ARBEITNOW_ENABLED: ${ARBEITNOW_ENABLED:-1}
+      ARBEITNOW_PAGES: ${ARBEITNOW_PAGES:-3}
+      SYMFONY_JOBS_RSS_ENABLED: ${SYMFONY_JOBS_RSS_ENABLED:-1}
+      LE_STUDIO_TECH_ENABLED: ${LE_STUDIO_TECH_ENABLED:-1}
+      LE_STUDIO_TECH_PAGES: ${LE_STUDIO_TECH_PAGES:-8}
+      LE_STUDIO_TECH_MAX_DETAILS: ${LE_STUDIO_TECH_MAX_DETAILS:-20}
+      JOB_SYNC_INTERVAL_SECONDS: ${JOB_SYNC_INTERVAL_SECONDS:-21600}
+      CONNECTOR_ALERT_WEBHOOK_URL: ${CONNECTOR_ALERT_WEBHOOK_URL:-}
+      CONNECTOR_ALERT_WEBHOOK_ALLOWED_HOST: ${CONNECTOR_ALERT_WEBHOOK_ALLOWED_HOST:-}
+      CONNECTOR_ALERT_WEBHOOK_SECRET: ${CONNECTOR_ALERT_WEBHOOK_SECRET:-}
+      BROWSER_WORKER_URL: ${BROWSER_WORKER_URL:-http://browser-worker:3100}
+      JOBPILOT_BROWSER_WORKER_TOKEN: ${JOBPILOT_BROWSER_WORKER_TOKEN:-jobpilot-local-browser-worker-token-change-me}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8080:8080"
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1:8080/api/health') === false ? 1 : 0);"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+    volumes:
+      - ./initial-data:/app/initial-data:ro
+      - jobpilot_private:/app/var/private
+
+  scheduler:
+    build:
+      context: ./api
+    entrypoint:
+      - sh
+      - -c
+      - |
+        while true; do
+          php bin/console app:jobs:repair-contaminated-gmail --limit=50 || true
+          php bin/console app:jobs:sync || true
+          php bin/console app:connectors:notify-freshness --interval="$${JOB_SYNC_INTERVAL_SECONDS:-21600}" || true
+          sleep "$${JOB_SYNC_INTERVAL_SECONDS:-21600}"
+        done
+    restart: unless-stopped
+    environment:
+      APP_ENV: dev
+      APP_DEBUG: 1
+      APP_SECRET: ${APP_SECRET:-change-me}
+      APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:-}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-jobpilot}:${POSTGRES_PASSWORD:-jobpilot}@db:5432/${POSTGRES_DB:-jobpilot}?serverVersion=17&charset=utf8
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:8080/api/integrations/gmail/callback}
+      WEB_URL: ${WEB_URL:-http://localhost:3000}
+      GMAIL_SEARCH_QUERY: "${GMAIL_SEARCH_QUERY:-(job OR emploi OR offre OR mission OR candidature OR application OR recruiter OR entretien) newer_than:30d}"
+      GMAIL_MAX_RESULTS: ${GMAIL_MAX_RESULTS:-100}
+      GMAIL_MAX_PAGES: ${GMAIL_MAX_PAGES:-3}
+      ADZUNA_APP_ID: ${ADZUNA_APP_ID:-}
+      ADZUNA_APP_KEY: ${ADZUNA_APP_KEY:-}
+      ADZUNA_COUNTRY: ${ADZUNA_COUNTRY:-fr}
+      ADZUNA_WHERE: ${ADZUNA_WHERE:-}
+      ADZUNA_RESULTS_PER_QUERY: ${ADZUNA_RESULTS_PER_QUERY:-20}
+      FRANCE_TRAVAIL_CLIENT_ID: ${FRANCE_TRAVAIL_CLIENT_ID:-}
+      FRANCE_TRAVAIL_CLIENT_SECRET: ${FRANCE_TRAVAIL_CLIENT_SECRET:-}
+      FRANCE_TRAVAIL_SCOPE: "${FRANCE_TRAVAIL_SCOPE:-api_offresdemploiv2 o2dsoffre}"
+      FRANCE_TRAVAIL_TOKEN_ENDPOINT: ${FRANCE_TRAVAIL_TOKEN_ENDPOINT:-https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=/partenaire}
+      FRANCE_TRAVAIL_SEARCH_ENDPOINT: ${FRANCE_TRAVAIL_SEARCH_ENDPOINT:-https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search}
+      FRANCE_TRAVAIL_RESULTS_PER_QUERY: ${FRANCE_TRAVAIL_RESULTS_PER_QUERY:-50}
+      SMARTRECRUITERS_API_TOKEN: ${SMARTRECRUITERS_API_TOKEN:-}
+      SMARTRECRUITERS_COMPANY_IDENTIFIERS: ${SMARTRECRUITERS_COMPANY_IDENTIFIERS:-}
+      SMARTRECRUITERS_PAGES: ${SMARTRECRUITERS_PAGES:-1}
+      SMARTRECRUITERS_RESULTS_PER_PAGE: ${SMARTRECRUITERS_RESULTS_PER_PAGE:-100}
+      SMARTRECRUITERS_MAX_DETAILS: ${SMARTRECRUITERS_MAX_DETAILS:-20}
+      ARBEITNOW_ENABLED: ${ARBEITNOW_ENABLED:-1}
+      ARBEITNOW_PAGES: ${ARBEITNOW_PAGES:-3}
+      SYMFONY_JOBS_RSS_ENABLED: ${SYMFONY_JOBS_RSS_ENABLED:-1}
+      LE_STUDIO_TECH_ENABLED: ${LE_STUDIO_TECH_ENABLED:-1}
+      LE_STUDIO_TECH_PAGES: ${LE_STUDIO_TECH_PAGES:-8}
+      LE_STUDIO_TECH_MAX_DETAILS: ${LE_STUDIO_TECH_MAX_DETAILS:-20}
+      JOB_SYNC_INTERVAL_SECONDS: ${JOB_SYNC_INTERVAL_SECONDS:-21600}
+      CONNECTOR_ALERT_WEBHOOK_URL: ${CONNECTOR_ALERT_WEBHOOK_URL:-}
+      CONNECTOR_ALERT_WEBHOOK_ALLOWED_HOST: ${CONNECTOR_ALERT_WEBHOOK_ALLOWED_HOST:-}
+      CONNECTOR_ALERT_WEBHOOK_SECRET: ${CONNECTOR_ALERT_WEBHOOK_SECRET:-}
+      BROWSER_WORKER_URL: ${BROWSER_WORKER_URL:-http://browser-worker:3100}
+      JOBPILOT_BROWSER_WORKER_TOKEN: ${JOBPILOT_BROWSER_WORKER_TOKEN:-jobpilot-local-browser-worker-token-change-me}
+    depends_on:
+      api:
+        condition: service_healthy
+    volumes:
+      - ./initial-data:/app/initial-data:ro
+      - jobpilot_private:/app/var/private
+
+  web:
+    build:
+      context: ./web
+    environment:
+      NEXT_PUBLIC_API_URL: /api
+      API_INTERNAL_URL: http://api:8080
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3000:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:3000/api/health >/dev/null 2>&1 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 15s
+
+volumes:
+  jobpilot_db:
+  jobpilot_private:

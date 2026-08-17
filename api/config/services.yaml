@@ -1,0 +1,199 @@
+parameters:
+  upload_dir: '%kernel.project_dir%/var/private/cvs'
+  private_dir: '%kernel.project_dir%/var/private'
+  initial_data_dir: '%kernel.project_dir%/initial-data'
+  env(ADZUNA_APP_ID): ''
+  env(ADZUNA_APP_KEY): ''
+  env(ADZUNA_COUNTRY): 'fr'
+  env(ADZUNA_WHERE): ''
+  env(ADZUNA_RESULTS_PER_QUERY): '20'
+  env(FRANCE_TRAVAIL_CLIENT_ID): ''
+  env(FRANCE_TRAVAIL_CLIENT_SECRET): ''
+  env(FRANCE_TRAVAIL_SCOPE): 'api_offresdemploiv2 o2dsoffre'
+  env(FRANCE_TRAVAIL_TOKEN_ENDPOINT): 'https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=/partenaire'
+  env(FRANCE_TRAVAIL_SEARCH_ENDPOINT): 'https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search'
+  env(FRANCE_TRAVAIL_RESULTS_PER_QUERY): '50'
+  env(SMARTRECRUITERS_API_TOKEN): ''
+  env(SMARTRECRUITERS_COMPANY_IDENTIFIERS): ''
+  env(SMARTRECRUITERS_PAGES): '1'
+  env(SMARTRECRUITERS_RESULTS_PER_PAGE): '100'
+  env(SMARTRECRUITERS_MAX_DETAILS): '20'
+  env(ARBEITNOW_ENABLED): '1'
+  env(ARBEITNOW_PAGES): '3'
+  env(SYMFONY_JOBS_RSS_ENABLED): '1'
+  env(LE_STUDIO_TECH_ENABLED): '1'
+  env(LE_STUDIO_TECH_PAGES): '8'
+  env(LE_STUDIO_TECH_MAX_DETAILS): '20'
+  env(JOB_SYNC_INTERVAL_SECONDS): '21600'
+  env(CONNECTOR_ALERT_WEBHOOK_URL): ''
+  env(CONNECTOR_ALERT_WEBHOOK_ALLOWED_HOST): ''
+  env(CONNECTOR_ALERT_WEBHOOK_SECRET): ''
+  env(AI_MATCHING_ENABLED): '0'
+  env(GEMINI_API_KEY): ''
+  env(GEMINI_MATCHING_MODEL): 'gemini-3.5-flash-lite'
+  env(GEMINI_QUOTA_RPM): '15'
+  env(GEMINI_QUOTA_TPM): '250000'
+  env(GEMINI_QUOTA_RPD): '500'
+  env(AI_QUOTA_SAFETY_PERCENT): '80'
+  env(OPENAI_API_KEY): ''
+  env(OPENAI_MATCHING_MODEL): ''
+  env(MISTRAL_API_KEY): ''
+  env(MISTRAL_MATCHING_MODEL): ''
+  env(ANTHROPIC_API_KEY): ''
+  env(ANTHROPIC_MATCHING_MODEL): ''
+
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
+  _instanceof:
+    App\JobDiscovery\Domain\Connector\JobSourceConnector:
+      tags: ['app.job_source_connector']
+
+  App\:
+    resource: '../src/'
+    exclude:
+      - '../src/DependencyInjection/'
+      - '../src/Entity/'
+      - '../src/Kernel.php'
+      - '../src/Service/AdzunaJobProvider.php'
+      - '../src/Service/FranceTravailJobProvider.php'
+      - '../src/Service/SmartRecruitersJobProvider.php'
+      - '../src/Service/Ai/GeminiCustomScraperExtractor.php'
+      - '../src/JobDiscovery/Infrastructure/CustomScraping/CustomScraperJobConnector.php'
+      - '../src/JobDiscovery/Infrastructure/CustomScraping/AiRecoveryCustomScraperJobConnector.php'
+      - '../src/JobDiscovery/Infrastructure/CustomScraping/BrowserAwareCustomScraperJobConnector.php'
+
+  App\Service\CvStorage:
+    arguments:
+      $uploadDir: '%upload_dir%'
+
+  App\Service\GmailTokenStore:
+    arguments:
+      $privateDir: '%private_dir%'
+      $encryptionKey: '%env(APP_ENCRYPTION_KEY)%'
+
+  App\Service\ArbeitnowJobProvider:
+    arguments:
+      $enabled: '%env(bool:ARBEITNOW_ENABLED)%'
+      $pages: '%env(int:ARBEITNOW_PAGES)%'
+
+  App\Service\Integration\ConfiguredAdzunaJobProvider:
+    arguments:
+      $country: '%env(ADZUNA_COUNTRY)%'
+      $where: '%env(ADZUNA_WHERE)%'
+      $resultsPerQuery: '%env(int:ADZUNA_RESULTS_PER_QUERY)%'
+
+  App\Service\Integration\ConfiguredFranceTravailJobProvider:
+    arguments:
+      $scope: '%env(FRANCE_TRAVAIL_SCOPE)%'
+      $tokenEndpoint: '%env(FRANCE_TRAVAIL_TOKEN_ENDPOINT)%'
+      $searchEndpoint: '%env(FRANCE_TRAVAIL_SEARCH_ENDPOINT)%'
+      $resultsPerQuery: '%env(int:FRANCE_TRAVAIL_RESULTS_PER_QUERY)%'
+
+  App\Service\Integration\ConfiguredSmartRecruitersJobProvider:
+    arguments:
+      $pages: '%env(int:SMARTRECRUITERS_PAGES)%'
+      $resultsPerPage: '%env(int:SMARTRECRUITERS_RESULTS_PER_PAGE)%'
+      $maxDetails: '%env(int:SMARTRECRUITERS_MAX_DETAILS)%'
+
+  App\Service\SymfonyJobsRssProvider:
+    arguments:
+      $enabled: '%env(bool:SYMFONY_JOBS_RSS_ENABLED)%'
+
+  App\Service\LeStudioTechJobProvider:
+    arguments:
+      $enabled: '%env(bool:LE_STUDIO_TECH_ENABLED)%'
+      $pages: '%env(int:LE_STUDIO_TECH_PAGES)%'
+      $maxDetails: '%env(int:LE_STUDIO_TECH_MAX_DETAILS)%'
+
+  App\Service\Ai\AiJobMatchAnalyzerInterface: '@App\Service\Ai\ConfiguredGeminiJobMatchAnalyzer'
+  App\JobDiscovery\Application\CustomScraperAiExtractorInterface: '@App\Service\Ai\ConfiguredGeminiCustomScraperExtractor'
+  App\JobDiscovery\Application\BrowserRenderClientInterface: '@App\JobDiscovery\Infrastructure\Browser\HttpBrowserRenderClient'
+
+  App\Service\Ai\AiMatchingConfigurationStore:
+    arguments:
+      $privateDir: '%private_dir%'
+      $encryptionKey: '%env(APP_ENCRYPTION_KEY)%'
+      $environmentEnabled: '%env(bool:AI_MATCHING_ENABLED)%'
+      $environmentApiKey: '%env(GEMINI_API_KEY)%'
+      $environmentModel: '%env(GEMINI_MATCHING_MODEL)%'
+      $environmentQuotaRpm: '%env(int:GEMINI_QUOTA_RPM)%'
+      $environmentQuotaTpm: '%env(int:GEMINI_QUOTA_TPM)%'
+      $environmentQuotaRpd: '%env(int:GEMINI_QUOTA_RPD)%'
+      $environmentQuotaSafetyPercent: '%env(int:AI_QUOTA_SAFETY_PERCENT)%'
+
+  App\Service\Ai\AiQuotaManager:
+    arguments:
+      $privateDir: '%private_dir%'
+
+  App\Service\Ai\AiMatchingCache:
+    arguments:
+      $privateDir: '%private_dir%'
+
+  App\Service\Ai\CustomScraperAiExtractionCache:
+    arguments:
+      $privateDir: '%private_dir%'
+
+  App\Service\Ai\GeminiJobMatchAnalyzer:
+    arguments:
+      $enabled: '%env(bool:AI_MATCHING_ENABLED)%'
+      $apiKey: '%env(GEMINI_API_KEY)%'
+      $model: '%env(GEMINI_MATCHING_MODEL)%'
+
+  App\Service\Integration\ExternalIntegrationConfigurationStore:
+    arguments:
+      $privateDir: '%private_dir%'
+      $encryptionKey: '%env(APP_ENCRYPTION_KEY)%'
+      $environment:
+        openai:
+          apiKey: '%env(OPENAI_API_KEY)%'
+          model: '%env(OPENAI_MATCHING_MODEL)%'
+        mistral:
+          apiKey: '%env(MISTRAL_API_KEY)%'
+          model: '%env(MISTRAL_MATCHING_MODEL)%'
+        anthropic:
+          apiKey: '%env(ANTHROPIC_API_KEY)%'
+          model: '%env(ANTHROPIC_MATCHING_MODEL)%'
+        adzuna:
+          appId: '%env(ADZUNA_APP_ID)%'
+          appKey: '%env(ADZUNA_APP_KEY)%'
+        france-travail:
+          clientId: '%env(FRANCE_TRAVAIL_CLIENT_ID)%'
+          clientSecret: '%env(FRANCE_TRAVAIL_CLIENT_SECRET)%'
+        smartrecruiters:
+          apiToken: '%env(SMARTRECRUITERS_API_TOKEN)%'
+          companyIdentifiers: '%env(SMARTRECRUITERS_COMPANY_IDENTIFIERS)%'
+
+  App\JobDiscovery\Infrastructure\CustomScraping\BrowserAwareCustomScraperConnectorProvider:
+    tags: ['app.dynamic_job_source_connector_provider']
+
+  App\JobDiscovery\Application\ConnectorRegistry:
+    arguments:
+      $connectors: !tagged_iterator app.job_source_connector
+      $dynamicProviders: !tagged_iterator app.dynamic_job_source_connector_provider
+
+  App\JobDiscovery\Infrastructure\Scraping\Http\HttpScrapingStateStore:
+    arguments:
+      $directory: '%private_dir%/http-scraping/state'
+
+  App\JobDiscovery\Infrastructure\Scraping\Http\RobotsTxtGuard:
+    arguments:
+      $cacheDirectory: '%private_dir%/http-scraping/robots'
+
+  App\JobDiscovery\Infrastructure\Monitoring\ConnectorAlertWebhookNotifier:
+    arguments:
+      $stateFile: '%private_dir%/monitoring/connector-alert-webhook.json'
+      $webhookUrl: '%env(CONNECTOR_ALERT_WEBHOOK_URL)%'
+      $allowedHost: '%env(CONNECTOR_ALERT_WEBHOOK_ALLOWED_HOST)%'
+      $signingSecret: '%env(CONNECTOR_ALERT_WEBHOOK_SECRET)%'
+
+  App\Service\JobSearchSyncService:
+    arguments:
+      $privateDir: '%private_dir%'
+      $intervalSeconds: '%env(int:JOB_SYNC_INTERVAL_SECONDS)%'
+
+  App\Command\BootstrapCommand:
+    arguments:
+      $initialDataDir: '%initial_data_dir%'
