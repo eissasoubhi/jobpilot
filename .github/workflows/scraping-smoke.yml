@@ -1,0 +1,77 @@
+name: Scraping live smoke
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 6 * * 2'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: scraping-live-smoke
+  cancel-in-progress: false
+
+jobs:
+  le-studio-tech:
+    name: Le Studio Tech live smoke
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: jobpilot
+          POSTGRES_USER: jobpilot
+          POSTGRES_PASSWORD: jobpilot
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U jobpilot -d jobpilot"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      APP_ENV: prod
+      APP_DEBUG: 0
+      APP_SECRET: scraping-smoke-ci-only
+      APP_ENCRYPTION_KEY: ''
+      DATABASE_URL: postgresql://jobpilot:jobpilot@127.0.0.1:5432/jobpilot?serverVersion=17&charset=utf8
+      LE_STUDIO_TECH_ENABLED: 1
+      LE_STUDIO_TECH_PAGES: 1
+      LE_STUDIO_TECH_MAX_DETAILS: 1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: ctype, dom, iconv, intl, json, mbstring, pdo_pgsql, sodium, xml, xmlwriter
+          coverage: none
+          tools: composer:v2
+
+      - name: Install backend dependencies
+        working-directory: api
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare smoke-test database
+        run: |
+          cp -R initial-data api/initial-data
+          cd api
+          php bin/console doctrine:migrations:migrate --no-interaction
+          php bin/console app:bootstrap --no-interaction
+
+      - name: Run bounded live smoke test
+        working-directory: api
+        run: |
+          set -o pipefail
+          php bin/console app:scraping:smoke:le-studio-tech --no-interaction | tee /tmp/jobpilot-scraping-smoke.txt
+          {
+            echo '## Le Studio Tech — smoke test public'
+            echo
+            echo '```text'
+            cat /tmp/jobpilot-scraping-smoke.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
