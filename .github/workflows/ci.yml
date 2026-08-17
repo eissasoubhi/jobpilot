@@ -51,7 +51,21 @@ jobs:
           tools: composer:v2
       - name: Install backend dependencies
         working-directory: api
-        run: composer install --no-interaction --prefer-dist --no-progress
+        env:
+          COMPOSER_MAX_PARALLEL_HTTP: 4
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            if composer install --no-interaction --prefer-dist --no-progress; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              exit 1
+            fi
+            delay=$((attempt * 15))
+            echo "::warning::Composer install failed on attempt ${attempt}/3; retrying in ${delay}s with the same cache."
+            sleep "$delay"
+          done
       - name: Prepare initial data
         run: cp -R initial-data api/initial-data
       - name: Validate Symfony configuration
@@ -189,7 +203,21 @@ jobs:
 
       - name: Install backend dependencies
         working-directory: api
-        run: composer install --no-interaction --prefer-dist --no-progress
+        env:
+          COMPOSER_MAX_PARALLEL_HTTP: 4
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            if composer install --no-interaction --prefer-dist --no-progress; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              exit 1
+            fi
+            delay=$((attempt * 15))
+            echo "::warning::Composer install failed on attempt ${attempt}/3; retrying in ${delay}s with the same cache."
+            sleep "$delay"
+          done
 
       - name: Prepare isolated Chromium runtime
         run: docker build --tag jobpilot-browser-worker:ci browser-worker
