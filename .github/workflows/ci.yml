@@ -13,14 +13,10 @@ concurrency:
 permissions:
   contents: read
 
-# While the repository is private, CI stays on the existing runner so this
-# migration can be validated without consuming blocked private hosted minutes.
-# As soon as GitHub reports the repository as public, the same jobs switch to
-# the standard ephemeral GitHub-hosted runner automatically.
 jobs:
   backend:
     name: Backend tests
-    runs-on: ${{ github.event.repository.private && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:17-alpine
@@ -48,8 +44,6 @@ jobs:
           ref: ${{ github.head_ref || github.ref_name }}
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
-        env:
-          runner: ${{ github.event.repository.private && 'self-hosted' || '' }}
         with:
           php-version: '8.4'
           extensions: ctype, dom, iconv, intl, json, mbstring, pdo_pgsql, sodium, xml, xmlwriter, zip
@@ -82,7 +76,7 @@ jobs:
 
   frontend:
     name: Frontend tests
-    runs-on: ${{ github.event.repository.private && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: web
@@ -111,7 +105,7 @@ jobs:
 
   compose-config:
     name: Docker Compose configuration
-    runs-on: ${{ github.event.repository.private && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -124,7 +118,7 @@ jobs:
   e2e:
     name: Chromium end-to-end tests
     needs: [backend, frontend, compose-config]
-    runs-on: ${{ github.event.repository.private && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     services:
       postgres:
@@ -155,34 +149,7 @@ jobs:
         with:
           ref: ${{ github.head_ref || github.ref_name }}
 
-      - name: Reclaim self-hosted disk space before browser job
-        if: ${{ github.event.repository.private }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          rm -rf \
-            web/node_modules \
-            web/.next \
-            web/test-results \
-            web/playwright-report \
-            api/vendor \
-            api/var
-          docker container prune --force || true
-          docker volume prune --force || true
-          docker image rm --force jobpilot-browser-worker:ci 2>/dev/null || true
-          docker image prune --force || true
-          docker builder prune --force || true
-          echo "Disk usage before E2E dependencies:"
-          df -h /
-          available_kb="$(df -Pk / | awk 'NR == 2 { print $4 }')"
-          minimum_kb=$((4 * 1024 * 1024))
-          if [ "$available_kb" -lt "$minimum_kb" ]; then
-            echo "::error::Le runner JobPilot dispose de moins de 4 Gio libres avant l'E2E Chromium."
-            exit 1
-          fi
-
       - name: Reclaim safe hosted-runner disk space
-        if: ${{ !github.event.repository.private }}
         shell: bash
         run: |
           set -euo pipefail
@@ -201,8 +168,6 @@ jobs:
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
-        env:
-          runner: ${{ github.event.repository.private && 'self-hosted' || '' }}
         with:
           php-version: '8.4'
           extensions: ctype, dom, iconv, intl, json, mbstring, pdo_pgsql, sodium, xml, xmlwriter, zip
