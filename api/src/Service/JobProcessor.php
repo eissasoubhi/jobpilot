@@ -12,6 +12,7 @@ final class JobProcessor
     public function __construct(
         private LanguageDetector $languageDetector,
         private MatchingScoreService $matching,
+        private SearchPreferenceMatcher $searchPreferences,
         private TjmCalculator $tjmCalculator,
         private SalaryExpectationCalculator $salaryCalculator,
         private CvSelector $cvSelector,
@@ -26,6 +27,12 @@ final class JobProcessor
         $evaluation = $this->matching->evaluate($job, $settings);
         $reasons = $evaluation['reasons'];
         $hardRejected = $evaluation['hardRejected'];
+
+        $preferenceEvaluation = $this->searchPreferences->evaluate($job, $profile);
+        if (!$preferenceEvaluation['eligible']) {
+            $hardRejected = true;
+            array_push($reasons, ...$preferenceEvaluation['reasons']);
+        }
 
         if ($job->getApplicationEmail() === null) {
             $job->setApplicationEmail($this->emailExtractor->extract($job->getTitle().' '.$job->getDescription()));
