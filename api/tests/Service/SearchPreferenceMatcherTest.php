@@ -59,4 +59,20 @@ final class SearchPreferenceMatcherTest extends TestCase
         self::assertTrue($service->evaluate($hybrid, $profile)['eligible']);
         self::assertFalse($service->evaluate($onsite, $profile)['eligible']);
     }
+
+    public function testPreferenceRejectionCanBeIdentifiedForLaterReevaluation(): void
+    {
+        $profile = (new CandidateProfile())->fill([
+            'acceptedContracts' => ['Freelance'],
+            'workModePreference' => 'Aucune préférence',
+        ]);
+        $job = (new JobOffer())->fill(['contractType' => 'CDI', 'workMode' => 'Hybride']);
+        $service = new SearchPreferenceMatcher();
+        $evaluation = $service->evaluate($job, $profile);
+
+        self::assertFalse($evaluation['eligible']);
+        $job->setEvaluation('fr', 0, $evaluation['reasons'], null, null, 'REJECTED_BY_FILTER', null);
+
+        self::assertTrue($service->isPreferenceRejection($job));
+    }
 }
