@@ -71,7 +71,8 @@ describe('GlobalSearchCriteriaPanel', () => {
     expect(screen.getByText('matchingThreshold', { selector: 'code' })).toBeInTheDocument();
     expect(screen.getAllByText('Transmis aux connecteurs')).toHaveLength(2);
     expect(screen.getAllByText('Traitement local')).toHaveLength(2);
-    expect(screen.getByText(/contrats acceptés, mobilité, ville et préférence de télétravail/i)).toBeInTheDocument();
+    expect(screen.getByText(/les contrats acceptés et le mode de travail recherché sont appliqués/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Profil candidat' })).toHaveAttribute('href', '/profil');
 
     fireEvent.change(screen.getByLabelText('Postes ciblés globaux — un par ligne'), {
       target: { value: ' Full-Stack Symfony/React \nfull-stack symfony/react' },

@@ -27,6 +27,10 @@ final class AutomaticSubmissionService
             return ['status' => 'skipped', 'reason' => 'disabled'];
         }
 
+        if ($job->getStatus() !== 'PREPARED') {
+            return ['status' => 'skipped', 'reason' => 'job_not_prepared'];
+        }
+
         if ($job->getScore() < $settings->getAutoSubmitThreshold()) {
             return ['status' => 'skipped', 'reason' => 'score_below_threshold'];
         }

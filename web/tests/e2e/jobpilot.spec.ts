@@ -108,6 +108,8 @@ test('profile, CV, job preparation, source filtering, guided submission and posi
   await secondDialog.getByLabel('Description').fill('Stage junior PHP Symfony.');
   await secondDialog.getByRole('button', { name: 'Analyser et enregistrer' }).click();
 
+  const contractFilter = page.getByLabel('Filtrer par contrat');
+  await contractFilter.selectOption('all');
   const rejectedHeading = page.getByRole('heading', { name: rejectedJobTitle, level: 3, exact: true });
   await expect(rejectedHeading).toBeVisible();
 

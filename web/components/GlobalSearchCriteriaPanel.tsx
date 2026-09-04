@@ -204,9 +204,9 @@ export function GlobalSearchCriteriaPanel() {
           />
 
           <div className="notice">
-            <strong>Données de profil non encore utilisées comme filtres :</strong>{' '}
-            contrats acceptés, mobilité, ville et préférence de télétravail restent modifiables dans le profil,
-            mais ne sont actuellement ni envoyés aux plateformes ni intégrés au score. Cette limite est affichée ici pour éviter un faux sentiment de filtrage.
+            <strong>Filtres de profil actifs :</strong>{' '}
+            les contrats acceptés et le mode de travail recherché sont appliqués avant la préparation d’une candidature.
+            Tu peux les modifier à tout moment dans <a href="/profil">Profil candidat</a>.
           </div>
 
           <div className="actions">
