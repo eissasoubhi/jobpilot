@@ -9,6 +9,8 @@ use App\Entity\JobOffer;
 
 final class SearchPreferenceMatcher
 {
+    private const REASON_PREFIX = 'Préférence de recherche : ';
+
     /** @return array{eligible: bool, reasons: list<string>} */
     public function evaluate(JobOffer $job, CandidateProfile $profile): array
     {
@@ -20,8 +22,8 @@ final class SearchPreferenceMatcher
             : [];
 
         if ($acceptedContracts !== [] && !$this->contractAllowed($job->getContractType(), $acceptedContracts)) {
-            $reasons[] = sprintf(
-                'Contrat %s hors préférences (%s).',
+            $reasons[] = self::REASON_PREFIX.sprintf(
+                'contrat %s hors critères (%s).',
                 $job->getContractType() !== '' ? $job->getContractType() : 'inconnu',
                 implode(', ', $acceptedContracts),
             );
@@ -29,8 +31,8 @@ final class SearchPreferenceMatcher
 
         $workModePreference = trim((string) ($profileData['workModePreference'] ?? ''));
         if (!$this->workModeAllowed($job->getWorkMode(), $workModePreference)) {
-            $reasons[] = sprintf(
-                'Mode de travail %s hors préférence (%s).',
+            $reasons[] = self::REASON_PREFIX.sprintf(
+                'mode de travail %s hors critère (%s).',
                 $job->getWorkMode() !== '' ? $job->getWorkMode() : 'inconnu',
                 $workModePreference,
             );
@@ -40,6 +42,22 @@ final class SearchPreferenceMatcher
             'eligible' => $reasons === [],
             'reasons' => $reasons,
         ];
+    }
+
+    public function isPreferenceRejection(JobOffer $job): bool
+    {
+        $reasons = $job->toArray()['scoreReasons'] ?? [];
+        if (!is_array($reasons)) {
+            return false;
+        }
+
+        foreach ($reasons as $reason) {
+            if (is_string($reason) && str_starts_with($reason, self::REASON_PREFIX)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** @param list<string> $acceptedContracts */
@@ -94,7 +112,7 @@ final class SearchPreferenceMatcher
 
         $jobMode = $this->canonicalWorkMode($jobWorkMode);
         if ($jobMode === 'UNKNOWN') {
-            // Missing source data must not silently reject an otherwise relevant offer.
+            // Une source incomplète ne doit pas écarter silencieusement une offre pertinente.
             return true;
         }
 
@@ -126,7 +144,7 @@ final class SearchPreferenceMatcher
             return ['ONSITE'];
         }
 
-        // Unknown free-text preferences stay non-blocking until the user picks a supported value.
+        // Une ancienne valeur libre inconnue reste non bloquante jusqu’à sa modification dans l’interface.
         return [];
     }
 
@@ -136,11 +154,11 @@ final class SearchPreferenceMatcher
         if ($normalized === '') {
             return 'UNKNOWN';
         }
-        if (preg_match('/teletravail total|full remote|100 ?% remote|remote only|teletravail|remote|distance/u', $normalized) === 1) {
-            return 'REMOTE';
-        }
         if (preg_match('/hybride|hybrid/u', $normalized) === 1) {
             return 'HYBRID';
+        }
+        if (preg_match('/teletravail total|full remote|100 ?% remote|remote only|teletravail|remote|distance/u', $normalized) === 1) {
+            return 'REMOTE';
         }
         if (preg_match('/sur site|presentiel|on site|onsite/u', $normalized) === 1) {
             return 'ONSITE';
