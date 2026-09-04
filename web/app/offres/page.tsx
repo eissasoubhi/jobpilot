@@ -59,6 +59,9 @@ type SyncResult = {
   errors?: string[];
 };
 
+type ContractFilter = 'all' | 'freelance' | 'cdi' | 'cdd';
+type WorkModeFilter = 'all' | 'remote' | 'hybrid' | 'onsite';
+
 const initialForm: JobForm = {
   source: 'Manuel',
   sourceUrl: '',
@@ -103,6 +106,32 @@ function formatDate(value: string | null | undefined): string {
   }).format(new Date(value));
 }
 
+function normalize(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9%]+/g, ' ')
+    .trim();
+}
+
+function contractCategory(value: string): Exclude<ContractFilter, 'all'> | 'other' {
+  const normalized = normalize(value);
+  if (/\bcdi\b/.test(normalized)) return 'cdi';
+  if (/\bcdd\b/.test(normalized)) return 'cdd';
+  if (/freelance|independant|independent|mission|portage|sous traitance|non salarie/.test(normalized)) return 'freelance';
+  return 'other';
+}
+
+function workModeCategory(value: string): Exclude<WorkModeFilter, 'all'> | 'unknown' {
+  const normalized = normalize(value);
+  if (normalized === '') return 'unknown';
+  if (/teletravail total|full remote|100 ?% remote|remote only|teletravail|remote|distance/.test(normalized)) return 'remote';
+  if (/hybride|hybrid/.test(normalized)) return 'hybrid';
+  if (/sur site|presentiel|on site|onsite/.test(normalized)) return 'onsite';
+  return 'unknown';
+}
+
 function occurrences(job: Job): JobSourceOccurrence[] {
   if (job.sources && job.sources.length > 0) return job.sources;
 
@@ -141,6 +170,8 @@ export default function JobsPage() {
   const [filter, setFilter] = useState('all');
   const [inboxView, setInboxView] = useState<OfferInboxView>('actionable');
   const [sourceFilter, setSourceFilter] = useState('all');
+  const [contractFilter, setContractFilter] = useState<ContractFilter>('freelance');
+  const [workModeFilter, setWorkModeFilter] = useState<WorkModeFilter>('all');
   const [syncing, setSyncing] = useState(false);
   const [syncInfo, setSyncInfo] = useState<SyncResult | null>(null);
 
@@ -192,6 +223,15 @@ export default function JobsPage() {
   useEffect(() => {
     let active = true;
 
+    const savedContract = window.localStorage.getItem('jobpilot.offers.contractFilter');
+    const savedWorkMode = window.localStorage.getItem('jobpilot.offers.workModeFilter');
+    if (savedContract && ['all', 'freelance', 'cdi', 'cdd'].includes(savedContract)) {
+      setContractFilter(savedContract as ContractFilter);
+    }
+    if (savedWorkMode && ['all', 'remote', 'hybrid', 'onsite'].includes(savedWorkMode)) {
+      setWorkModeFilter(savedWorkMode as WorkModeFilter);
+    }
+
     void (async () => {
       // The local catalog is the first paint. Applications and connector sync are
       // intentionally started only after those already synchronized offers render.
@@ -206,6 +246,16 @@ export default function JobsPage() {
       active = false;
     };
   }, [loadApplications, loadJobs, syncJobs]);
+
+  const changeContractFilter = (value: ContractFilter): void => {
+    setContractFilter(value);
+    window.localStorage.setItem('jobpilot.offers.contractFilter', value);
+  };
+
+  const changeWorkModeFilter = (value: WorkModeFilter): void => {
+    setWorkModeFilter(value);
+    window.localStorage.setItem('jobpilot.offers.workModeFilter', value);
+  };
 
   const submit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -264,9 +314,11 @@ export default function JobsPage() {
     () => jobs?.filter((job) => (
       (filter === 'all' || job.status === filter)
       && (sourceFilter === 'all' || occurrences(job).some((source) => source.sourceName === sourceFilter))
+      && (contractFilter === 'all' || contractCategory(job.contractType) === contractFilter)
+      && (workModeFilter === 'all' || workModeCategory(job.workMode) === workModeFilter)
       && matchesOfferInboxView(applicationsByJobId.get(job.id), inboxView)
     )) ?? [],
-    [jobs, filter, sourceFilter, applicationsByJobId, inboxView],
+    [jobs, filter, sourceFilter, contractFilter, workModeFilter, applicationsByJobId, inboxView],
   );
 
   const providerNames = syncInfo?.providers
@@ -344,17 +396,48 @@ export default function JobsPage() {
       </Card>
 
       <Card>
-        <label style={{ maxWidth: 360 }}>
-          Filtrer par source
-          <select
-            aria-label="Filtrer par source"
-            value={sourceFilter}
-            onChange={(event) => setSourceFilter(event.target.value)}
-          >
-            <option value="all">Toutes les sources</option>
-            {sources.map((source) => <option key={source} value={source}>{source}</option>)}
-          </select>
-        </label>
+        <div className="form-grid">
+          <label>
+            Source
+            <select
+              aria-label="Filtrer par source"
+              value={sourceFilter}
+              onChange={(event) => setSourceFilter(event.target.value)}
+            >
+              <option value="all">Toutes les sources</option>
+              {sources.map((source) => <option key={source} value={source}>{source}</option>)}
+            </select>
+          </label>
+          <label>
+            Contrat
+            <select
+              aria-label="Filtrer par contrat"
+              value={contractFilter}
+              onChange={(event) => changeContractFilter(event.target.value as ContractFilter)}
+            >
+              <option value="all">Tous les contrats</option>
+              <option value="freelance">Freelance</option>
+              <option value="cdi">CDI</option>
+              <option value="cdd">CDD</option>
+            </select>
+          </label>
+          <label>
+            Mode de travail
+            <select
+              aria-label="Filtrer par mode de travail"
+              value={workModeFilter}
+              onChange={(event) => changeWorkModeFilter(event.target.value as WorkModeFilter)}
+            >
+              <option value="all">Tous les modes</option>
+              <option value="remote">Télétravail</option>
+              <option value="hybrid">Hybride</option>
+              <option value="onsite">Sur site</option>
+            </select>
+          </label>
+        </div>
+        <div className="small muted" style={{ marginTop: 8 }}>
+          Les filtres Contrat et Mode de travail sont mémorisés sur cet appareil.
+        </div>
       </Card>
 
       <div className="tabs" aria-label="Boîte des offres">
