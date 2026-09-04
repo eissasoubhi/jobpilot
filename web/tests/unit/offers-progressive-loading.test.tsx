@@ -20,7 +20,7 @@ function cachedJob(): Job {
     title: 'Senior Symfony role already synchronized',
     company: 'Example',
     location: 'Paris',
-    contractType: 'CDI',
+    contractType: 'Freelance',
     workMode: 'Hybride',
     language: 'fr',
     description: 'PHP Symfony',
@@ -33,6 +33,7 @@ function cachedJob(): Job {
 describe('Offers progressive loading', () => {
   beforeEach(() => {
     apiMock.mockReset();
+    window.localStorage.clear();
   });
 
   it('renders the local catalog before starting application loading and connector sync', async () => {
