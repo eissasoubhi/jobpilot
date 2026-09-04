@@ -8,6 +8,14 @@ import { getErrorMessage } from '@/lib/errors';
 import type { Profile } from '@/lib/types';
 
 const splitLines = (value: string): string[] => value.split('\n').map((item) => item.trim()).filter(Boolean);
+const contractOptions = ['Freelance', 'CDI', 'CDD'] as const;
+const workModeOptions = [
+  'Aucune préférence',
+  'Télétravail uniquement',
+  'Hybride ou télétravail',
+  'Hybride uniquement',
+  'Sur site uniquement',
+] as const;
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -39,6 +47,13 @@ export default function ProfilePage() {
     setMessage('');
   };
 
+  const toggleContract = (contract: string): void => {
+    const selected = profile.acceptedContracts.includes(contract)
+      ? profile.acceptedContracts.filter((value) => value !== contract)
+      : [...profile.acceptedContracts, contract];
+    set('acceptedContracts', selected);
+  };
+
   const save = async (): Promise<void> => {
     setError('');
     try {
@@ -46,7 +61,7 @@ export default function ProfilePage() {
         method: 'PUT',
         body: JSON.stringify(profile),
       }));
-      setMessage('Profil enregistré.');
+      setMessage('Profil enregistré. Les prochaines offres utiliseront ces préférences.');
     } catch (caughtError: unknown) {
       setError(getErrorMessage(caughtError));
     }
@@ -60,7 +75,7 @@ export default function ProfilePage() {
     <>
       <PageHeader
         title="Profil candidat"
-        description="Source unique utilisée par JobPilot pour préparer et, bientôt, préremplir les formulaires de candidature."
+        description="Tes informations et préférences utilisées pour filtrer et préparer les candidatures."
         actions={<button className="btn" type="button" onClick={() => void save()}>Enregistrer</button>}
       />
       {message !== '' && <div className="notice">{message}</div>}
@@ -117,15 +132,43 @@ export default function ProfilePage() {
 
       <div style={{ height: 14 }} />
       <Card>
-        <h2>Préférences de candidature</h2>
+        <h2>Préférences de recherche</h2>
+        <p className="muted">
+          Ces critères filtrent les offres avant la préparation d’une candidature. Tu peux les modifier à tout moment.
+        </p>
         <div className="form-grid">
+          <div className="full">
+            <strong className="small">Contrats recherchés</strong>
+            <div className="actions" style={{ marginTop: 8 }}>
+              {contractOptions.map((contract) => (
+                <label key={contract} style={{ display: 'inline-flex', flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+                  <input
+                    type="checkbox"
+                    checked={profile.acceptedContracts.includes(contract)}
+                    onChange={() => toggleContract(contract)}
+                    style={{ width: 'auto' }}
+                  />
+                  {contract}
+                </label>
+              ))}
+            </div>
+            <div className="small muted" style={{ marginTop: 6 }}>
+              Aucun contrat sélectionné = aucun filtre de contrat.
+            </div>
+          </div>
+
+          <label>
+            Mode de travail recherché
+            <select value={profile.workModePreference} onChange={(e) => set('workModePreference', e.target.value)}>
+              {workModeOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+            </select>
+          </label>
+
           <label>Mobilité<input value={profile.mobility} onChange={(e) => set('mobility', e.target.value)} /></label>
           <label>Localisations préférées<input value={profile.preferredLocations.join(', ')} onChange={(e) => set('preferredLocations', e.target.value.split(',').map((v) => v.trim()).filter(Boolean))} /></label>
           <label>Autorisation de travail<input value={profile.workAuthorisation} onChange={(e) => set('workAuthorisation', e.target.value)} /></label>
           <label>Disponibilité<input value={profile.availability} onChange={(e) => set('availability', e.target.value)} /></label>
           <label>Préavis<input value={profile.noticePeriod} onChange={(e) => set('noticePeriod', e.target.value)} /></label>
-          <label>Préférence télétravail / site<input value={profile.workModePreference} onChange={(e) => set('workModePreference', e.target.value)} /></label>
-          <label>Contrats acceptés<input value={profile.acceptedContracts.join(', ')} onChange={(e) => set('acceptedContracts', e.target.value.split(',').map((v) => v.trim()).filter(Boolean))} /></label>
           <label>Salaire souhaité (€ brut/an)<input type="number" min={0} value={profile.desiredSalary ?? ''} onChange={(e) => set('desiredSalary', e.target.value === '' ? null : Number(e.target.value))} /></label>
           <label>TJM souhaité (€)<input type="number" min={0} value={profile.desiredTjm ?? ''} onChange={(e) => set('desiredTjm', e.target.value === '' ? null : Number(e.target.value))} /></label>
         </div>
