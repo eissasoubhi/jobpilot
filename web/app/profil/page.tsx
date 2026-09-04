@@ -61,7 +61,7 @@ export default function ProfilePage() {
         method: 'PUT',
         body: JSON.stringify(profile),
       }));
-      setMessage('Profil enregistré. Les prochaines offres utiliseront ces préférences.');
+      setMessage('Profil enregistré. Les offres concernées ont été réévaluées.');
     } catch (caughtError: unknown) {
       setError(getErrorMessage(caughtError));
     }
@@ -70,6 +70,8 @@ export default function ProfilePage() {
   const technologyExperience = Object.entries(profile.technologyExperience)
     .map(([technology, years]) => `${technology}: ${years}`)
     .join('\n');
+  const visibleContractOptions = Array.from(new Set([...contractOptions, ...profile.acceptedContracts]));
+  const knownWorkMode = workModeOptions.includes(profile.workModePreference as typeof workModeOptions[number]);
 
   return (
     <>
@@ -140,7 +142,7 @@ export default function ProfilePage() {
           <div className="full">
             <strong className="small">Contrats recherchés</strong>
             <div className="actions" style={{ marginTop: 8 }}>
-              {contractOptions.map((contract) => (
+              {visibleContractOptions.map((contract) => (
                 <label key={contract} style={{ display: 'inline-flex', flexDirection: 'row', alignItems: 'center', gap: 7 }}>
                   <input
                     type="checkbox"
@@ -160,6 +162,9 @@ export default function ProfilePage() {
           <label>
             Mode de travail recherché
             <select value={profile.workModePreference} onChange={(e) => set('workModePreference', e.target.value)}>
+              {!knownWorkMode && profile.workModePreference !== '' && (
+                <option value={profile.workModePreference}>{profile.workModePreference} — valeur actuelle</option>
+              )}
               {workModeOptions.map((option) => <option key={option} value={option}>{option}</option>)}
             </select>
           </label>
