@@ -30,7 +30,7 @@ type ReviewDecision = 'IGNORED_NOT_MATCH' | 'SUBMITTED';
 
 export default function ReviewQueuePage() {
   const [applications, setApplications] = useState<Application[] | null>(null);
-  const [jobs, setJobs] = useState<Job[] | null>(null);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [index, setIndex] = useState(0);
   const [error, setError] = useState('');
   const [decisionSaving, setDecisionSaving] = useState<ReviewDecision | null>(null);
@@ -40,13 +40,15 @@ export default function ReviewQueuePage() {
 
   const load = useCallback(async (): Promise<void> => {
     try {
-      const [applicationResult, jobResult] = await Promise.all([
-        api<Application[]>('/applications'),
-        api<Job[]>('/jobs'),
-      ]);
+      const applicationResult = await api<Application[]>('/applications');
       setApplications(applicationResult);
-      setJobs(jobResult);
       setError('');
+
+      // The queue is fully usable from applications alone. Ranking data from /jobs
+      // is an enhancement only: a slow or unavailable catalog must never blank the queue.
+      void api<Job[]>('/jobs')
+        .then(setJobs)
+        .catch(() => setJobs([]));
     } catch (caughtError: unknown) {
       setApplications([]);
       setJobs([]);
@@ -59,11 +61,11 @@ export default function ReviewQueuePage() {
   }, [load]);
 
   const queue = useMemo(
-    () => buildReviewQueue(applications ?? [], jobs ?? []),
+    () => buildReviewQueue(applications ?? [], jobs),
     [applications, jobs],
   );
 
-  const loading = applications === null || jobs === null;
+  const loading = applications === null;
   const currentIndex = clampReviewQueueIndex(index, queue.length);
   const current = currentReviewQueueItem(queue, currentIndex);
   const progress = queue.length > 0 ? ((currentIndex + 1) / queue.length) * 100 : 0;
