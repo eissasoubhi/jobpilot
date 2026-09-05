@@ -71,7 +71,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       <aside className="sidebar">
         <div className="brand">
           <span className="brand-mark">JP</span>
-          <div><strong>JobPilot</strong><small>Local</small></div>
+          <div><strong>JobPilot</strong></div>
         </div>
         <nav className="sidebar-nav" aria-label="Navigation principale">
           {navigation.map((group) => (
