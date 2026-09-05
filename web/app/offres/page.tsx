@@ -347,10 +347,10 @@ export default function JobsPage() {
       <Card>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
           <div className="actions" style={{ alignItems: 'center' }}>
-            <strong>Synchronisation</strong>
+            <strong>Recherche automatique</strong>
             <Badge tone={syncing ? 'blue' : 'good'}>{syncing ? 'En cours' : 'À jour'}</Badge>
             {syncInfo?.imported != null && <Badge tone="good">{syncInfo.imported} nouvelle(s)</Badge>}
-            {syncInfo?.merged != null && <Badge tone="blue">{syncInfo.merged} fusionnée(s)</Badge>}
+            {syncInfo?.merged != null && <Badge tone="blue">{syncInfo.merged} source(s) fusionnée(s)</Badge>}
             {syncInfo?.failed != null && syncInfo.failed > 0 && <Badge tone="warn">{syncInfo.failed} échec(s)</Badge>}
           </div>
           <span className="small muted">Dernière recherche : {formatDate(syncInfo?.lastSyncedAt)}</span>
@@ -442,6 +442,7 @@ export default function JobsPage() {
                       <Badge tone={tone(job.status)}>{job.status}</Badge>
                       <Badge>{job.contractType || 'Contrat inconnu'}</Badge>
                       <Badge>{job.workMode || 'Mode inconnu'}</Badge>
+                      {jobOccurrences.length > 1 && <Badge>{jobOccurrences.length} sources</Badge>}
                       {jobOccurrences.slice(0, 2).map((source) => (
                         <Badge key={`${source.sourceCode}-${source.externalId || source.sourceUrl || source.sourceName}`}>{source.sourceName}</Badge>
                       ))}
