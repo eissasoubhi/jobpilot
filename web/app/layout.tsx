@@ -4,10 +4,11 @@ import type { ReactNode } from 'react';
 import { Shell } from '@/components/Shell';
 
 import './globals.css';
+import './design-system.css';
 
 export const metadata: Metadata = {
-  title: 'JobPilot Local',
-  description: 'Gestion locale des candidatures',
+  title: 'JobPilot',
+  description: 'Piloter sa recherche, ses offres et ses candidatures au même endroit',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
