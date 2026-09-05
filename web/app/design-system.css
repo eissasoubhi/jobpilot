@@ -139,10 +139,24 @@ select:focus {
   box-shadow: 0 0 0 3px rgba(67, 89, 216, .10);
 }
 
+.table-wrap {
+  border: 1px solid var(--jp-color-border);
+  border-radius: var(--jp-radius-md);
+  background: var(--jp-color-surface);
+}
+
 .table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   color: #778195;
+  background: #fafbfe;
   font-size: 11px;
   font-weight: 800;
+}
+
+.table td {
+  color: #2f3b50;
 }
 
 .table tbody tr {
@@ -150,7 +164,81 @@ select:focus {
 }
 
 .table tbody tr:hover {
-  background: #fafbfe;
+  background: #f8f9fd;
+}
+
+.tabs {
+  gap: var(--jp-space-2);
+}
+
+.tabs button {
+  min-height: 36px;
+  border-color: var(--jp-color-border);
+  color: #536075;
+  font-size: 12px;
+  font-weight: 700;
+  transition: border-color .15s ease, background .15s ease, color .15s ease;
+}
+
+.tabs button:hover {
+  border-color: var(--jp-color-border-strong);
+  background: var(--jp-color-surface-subtle);
+}
+
+.tabs button.active {
+  background: var(--jp-color-primary);
+  border-color: var(--jp-color-primary);
+  color: #fff;
+}
+
+.tabs button:focus-visible {
+  outline: 3px solid rgba(67, 89, 216, .16);
+  outline-offset: 2px;
+}
+
+.card > .list-row {
+  margin-inline: -6px;
+  padding: var(--jp-space-4) 6px;
+  border-bottom-color: var(--jp-color-border);
+}
+
+.card > .list-row:first-child {
+  padding-top: 4px;
+}
+
+.card > .list-row:last-child {
+  padding-bottom: 4px;
+}
+
+.list-row h3 {
+  color: #26334a;
+  line-height: 1.35;
+  letter-spacing: -.012em;
+}
+
+.list-row details {
+  max-width: 78ch;
+}
+
+.list-row summary {
+  width: fit-content;
+  cursor: pointer;
+  user-select: none;
+}
+
+.list-row summary:hover {
+  color: var(--jp-color-primary);
+}
+
+.score {
+  width: 52px;
+  height: 52px;
+  border: 1px solid #dfe2ff;
+  border-radius: var(--jp-radius-md);
+  background: linear-gradient(145deg, #f5f6ff, var(--jp-color-primary-soft));
+  color: var(--jp-color-primary);
+  font-size: 15px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8);
 }
 
 .notice {
@@ -185,6 +273,27 @@ select:focus {
   background: var(--jp-color-surface);
 }
 
+.jp-data-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--jp-space-4);
+  align-items: start;
+  padding: var(--jp-space-4) 0;
+  border-bottom: 1px solid var(--jp-color-border);
+}
+
+.jp-data-row:last-child {
+  border-bottom: 0;
+}
+
+.jp-data-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--jp-space-2);
+  color: var(--jp-color-text-subtle);
+  font-size: var(--jp-font-xs);
+}
+
 .jp-editorial-surface {
   max-width: 78ch;
   color: #303b4f;
@@ -216,6 +325,22 @@ select:focus {
   font-weight: 800;
   letter-spacing: .08em;
   text-transform: uppercase;
+}
+
+@media (max-width: 700px) {
+  .table-wrap {
+    border-inline: 0;
+    border-radius: 0;
+  }
+
+  .list-row {
+    align-items: flex-start;
+  }
+
+  .score {
+    width: 46px;
+    height: 46px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
