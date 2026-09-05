@@ -12,6 +12,9 @@ const preview: Preview = {
       expanded: true,
     },
     layout: 'centered',
+    nextjs: {
+      appDirectory: true,
+    },
   },
   tags: ['autodocs'],
 };
