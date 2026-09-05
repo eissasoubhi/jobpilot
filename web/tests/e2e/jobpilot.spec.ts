@@ -36,6 +36,7 @@ test('all main pages load without browser or server errors', async ({ page }) =>
       await expect(page.getByRole('button', { name: 'Rechercher maintenant' })).toBeVisible();
       await expect(page.getByText('Recherche automatique', { exact: true })).toBeVisible();
       await expect(page.getByLabel('Filtrer par source')).toBeVisible();
+      await expect(page.getByLabel('Filtrer par contrat')).toHaveCount(0);
     }
 
     if (route === '/connecteurs') {
@@ -63,6 +64,12 @@ test('profile, CV, job preparation, source filtering, guided submission and posi
   await page.goto('/profil');
   await expect(page.getByLabel('Nom complet')).toHaveValue('Demo Candidate');
   await page.getByLabel('Ville').fill('Paris');
+
+  const freelancePreference = page.getByRole('checkbox', { name: 'Freelance', exact: true });
+  const cddPreference = page.getByRole('checkbox', { name: 'CDD', exact: true });
+  if (!(await freelancePreference.isChecked())) await freelancePreference.check();
+  if (await cddPreference.isChecked()) await cddPreference.uncheck();
+
   await page.getByRole('button', { name: 'Enregistrer' }).click();
   await expect(page.getByText('Profil enregistré.')).toBeVisible();
 
@@ -108,10 +115,9 @@ test('profile, CV, job preparation, source filtering, guided submission and posi
   await secondDialog.getByLabel('Description').fill('Stage junior PHP Symfony.');
   await secondDialog.getByRole('button', { name: 'Analyser et enregistrer' }).click();
 
-  const contractFilter = page.getByLabel('Filtrer par contrat');
-  await contractFilter.selectOption('all');
+  await expect(page.getByLabel('Filtrer par contrat')).toHaveCount(0);
   const rejectedHeading = page.getByRole('heading', { name: rejectedJobTitle, level: 3, exact: true });
-  await expect(rejectedHeading).toBeVisible();
+  await expect(rejectedHeading).toBeHidden();
 
   const sourceFilter = page.getByLabel('Filtrer par source');
   await sourceFilter.selectOption({ label: sourceA });
@@ -119,9 +125,10 @@ test('profile, CV, job preparation, source filtering, guided submission and posi
   await expect(rejectedHeading).toBeHidden();
   await sourceFilter.selectOption({ label: sourceB });
   await expect(jobHeading).toBeHidden();
-  await expect(rejectedHeading).toBeVisible();
+  await expect(rejectedHeading).toBeHidden();
   await sourceFilter.selectOption('all');
   await expect(jobHeading).toBeVisible();
+  await expect(rejectedHeading).toBeHidden();
 
   await page.goto('/candidatures');
   const applicationHeading = page.getByRole('heading', { name: jobTitle, level: 3, exact: true });
