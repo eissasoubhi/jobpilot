@@ -110,6 +110,20 @@ describe('ReviewQueuePage', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Offre 2 sur 2 : First Symfony role');
   });
 
+  it('keeps ready applications visible when the optional jobs ranking endpoint fails', async () => {
+    const applications = [application(1, 'Queue survives jobs failure', 'READY_TO_SUBMIT')];
+    apiMock
+      .mockResolvedValueOnce(applications)
+      .mockRejectedValueOnce(new Error('Jobs endpoint unavailable'));
+
+    render(<ReviewQueuePage />);
+
+    await waitFor(() => expect(screen.getByText('Carte complète Queue survives jobs failure')).toBeInTheDocument());
+    await waitFor(() => expect(apiMock).toHaveBeenCalledWith('/jobs'));
+    expect(screen.getByText('1 prête à envoyer')).toBeInTheDocument();
+    expect(screen.queryByText(/Jobs endpoint unavailable/i)).not.toBeInTheDocument();
+  });
+
   it('marks the current application as submitted, advances and focuses the next offer', async () => {
     const applications = [
       application(1, 'First Symfony role', 'READY_TO_SUBMIT'),
