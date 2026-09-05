@@ -8,7 +8,8 @@ import { Badge, Card, Empty, ErrorBox, Loading, PageHeader } from '@/components/
 import { api } from '@/lib/api';
 import { getErrorMessage } from '@/lib/errors';
 import { matchesOfferInboxView, type OfferInboxView } from '@/lib/offer-inbox';
-import type { Application, Job, JobSourceOccurrence } from '@/lib/types';
+import { matchesProfileContracts } from '@/lib/offer-profile';
+import type { Application, Job, JobSourceOccurrence, Profile } from '@/lib/types';
 
 type JobForm = {
   source: string;
@@ -31,15 +32,8 @@ type JobForm = {
 type ProviderSync = {
   code?: string;
   name: string;
-  mode?: string;
   configured?: boolean;
   enabled?: boolean;
-  received?: number;
-  imported?: number;
-  merged?: number;
-  duplicates?: number;
-  failed?: number;
-  error?: string | null;
 };
 
 type SyncResult = {
@@ -59,8 +53,9 @@ type SyncResult = {
   errors?: string[];
 };
 
-type ContractFilter = 'all' | 'freelance' | 'cdi' | 'cdd';
 type WorkModeFilter = 'all' | 'remote' | 'hybrid' | 'onsite';
+
+const PAGE_SIZE = 20;
 
 const initialForm: JobForm = {
   source: 'Manuel',
@@ -69,7 +64,7 @@ const initialForm: JobForm = {
   company: '',
   clientName: '',
   location: '',
-  contractType: 'CDI',
+  contractType: 'Freelance',
   workMode: 'Hybride',
   description: '',
   publishedAt: '',
@@ -115,14 +110,6 @@ function normalize(value: string): string {
     .trim();
 }
 
-function contractCategory(value: string): Exclude<ContractFilter, 'all'> | 'other' {
-  const normalized = normalize(value);
-  if (/\bcdi\b/.test(normalized)) return 'cdi';
-  if (/\bcdd\b/.test(normalized)) return 'cdd';
-  if (/freelance|independant|independent|mission|portage|sous traitance|non salarie/.test(normalized)) return 'freelance';
-  return 'other';
-}
-
 function workModeCategory(value: string): Exclude<WorkModeFilter, 'all'> | 'unknown' {
   const normalized = normalize(value);
   if (normalized === '') return 'unknown';
@@ -150,19 +137,9 @@ function occurrences(job: Job): JobSourceOccurrence[] {
   }];
 }
 
-function matchLabel(matchType: string): string {
-  return {
-    PRIMARY: 'Source principale',
-    EXACT_SOURCE_ID: 'Occurrence déjà connue',
-    EXACT_URL: 'Fusion par URL',
-    EXACT_FINGERPRINT: 'Fusion exacte',
-    SIMILARITY: 'Fusion par similarité',
-    LEGACY: 'Source historique',
-  }[matchType] ?? matchType;
-}
-
 export default function JobsPage() {
   const [jobs, setJobs] = useState<Job[] | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [applications, setApplications] = useState<Application[] | null>(null);
   const [form, setForm] = useState<JobForm>(initialForm);
   const [error, setError] = useState('');
@@ -170,20 +147,32 @@ export default function JobsPage() {
   const [filter, setFilter] = useState('all');
   const [inboxView, setInboxView] = useState<OfferInboxView>('actionable');
   const [sourceFilter, setSourceFilter] = useState('all');
-  const [contractFilter, setContractFilter] = useState<ContractFilter>('freelance');
   const [workModeFilter, setWorkModeFilter] = useState<WorkModeFilter>('all');
   const [syncing, setSyncing] = useState(false);
   const [syncInfo, setSyncInfo] = useState<SyncResult | null>(null);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [expandedApplicationIds, setExpandedApplicationIds] = useState<Set<number>>(() => new Set());
+  const [expandedSourceIds, setExpandedSourceIds] = useState<Set<number>>(() => new Set());
 
   const loadJobs = useCallback(async (): Promise<void> => {
+    const result = await api<Job[]>('/jobs');
+    setJobs(result);
+  }, []);
+
+  const loadProfile = useCallback(async (): Promise<void> => {
+    const result = await api<Profile>('/profile');
+    setProfile(result);
+  }, []);
+
+  const loadCatalog = useCallback(async (): Promise<void> => {
     try {
-      const result = await api<Job[]>('/jobs');
-      setJobs(result);
+      await Promise.all([loadJobs(), loadProfile()]);
+      setError('');
     } catch (caughtError: unknown) {
       setJobs((current) => current ?? []);
-      setError(getErrorMessage(caughtError));
+      setError(`Impossible de charger les offres avec les préférences du profil : ${getErrorMessage(caughtError)}`);
     }
-  }, []);
+  }, [loadJobs, loadProfile]);
 
   const loadApplications = useCallback(async (): Promise<void> => {
     try {
@@ -191,51 +180,40 @@ export default function JobsPage() {
       setApplications(result);
     } catch (caughtError: unknown) {
       setApplications((current) => current ?? []);
-      setError(`Les offres restent disponibles, mais les préparations de candidature sont indisponibles : ${getErrorMessage(caughtError)}`);
+      setError(`Les offres restent disponibles, mais les candidatures préparées ne peuvent pas être chargées : ${getErrorMessage(caughtError)}`);
     }
   }, []);
 
   const refreshWorkspace = useCallback(async (): Promise<void> => {
-    await Promise.all([loadJobs(), loadApplications()]);
-  }, [loadApplications, loadJobs]);
+    await Promise.all([loadJobs(), loadProfile(), loadApplications()]);
+  }, [loadApplications, loadJobs, loadProfile]);
 
   const syncJobs = useCallback(async (force: boolean): Promise<void> => {
     setSyncing(true);
     if (force) setError('');
 
     try {
-      const result = await api<SyncResult>(`/job-search/sync${force ? '?force=1' : ''}`, {
-        method: 'POST',
-      });
+      const result = await api<SyncResult>(`/job-search/sync${force ? '?force=1' : ''}`, { method: 'POST' });
       setSyncInfo(result);
-
-      // Keep the already rendered local catalog visible while the refreshed catalog
-      // is fetched. New or updated offers replace the list only when the request ends.
-      await loadJobs();
+      await Promise.all([loadJobs(), loadProfile()]);
       void loadApplications();
     } catch (caughtError: unknown) {
       setError(getErrorMessage(caughtError));
     } finally {
       setSyncing(false);
     }
-  }, [loadApplications, loadJobs]);
+  }, [loadApplications, loadJobs, loadProfile]);
 
   useEffect(() => {
     let active = true;
 
-    const savedContract = window.localStorage.getItem('jobpilot.offers.contractFilter');
     const savedWorkMode = window.localStorage.getItem('jobpilot.offers.workModeFilter');
-    if (savedContract && ['all', 'freelance', 'cdi', 'cdd'].includes(savedContract)) {
-      setContractFilter(savedContract as ContractFilter);
-    }
     if (savedWorkMode && ['all', 'remote', 'hybrid', 'onsite'].includes(savedWorkMode)) {
       setWorkModeFilter(savedWorkMode as WorkModeFilter);
     }
 
     void (async () => {
-      // The local catalog is the first paint. Applications and connector sync are
-      // intentionally started only after those already synchronized offers render.
-      await loadJobs();
+      await loadCatalog();
       if (!active) return;
 
       void loadApplications();
@@ -245,12 +223,7 @@ export default function JobsPage() {
     return () => {
       active = false;
     };
-  }, [loadApplications, loadJobs, syncJobs]);
-
-  const changeContractFilter = (value: ContractFilter): void => {
-    setContractFilter(value);
-    window.localStorage.setItem('jobpilot.offers.contractFilter', value);
-  };
+  }, [loadApplications, loadCatalog, syncJobs]);
 
   const changeWorkModeFilter = (value: WorkModeFilter): void => {
     setWorkModeFilter(value);
@@ -312,113 +285,97 @@ export default function JobsPage() {
 
   const displayed = useMemo(
     () => jobs?.filter((job) => (
-      (filter === 'all' || job.status === filter)
+      (profile === null || matchesProfileContracts(job, profile))
+      && (filter === 'all' || job.status === filter)
       && (sourceFilter === 'all' || occurrences(job).some((source) => source.sourceName === sourceFilter))
-      && (contractFilter === 'all' || contractCategory(job.contractType) === contractFilter)
       && (workModeFilter === 'all' || workModeCategory(job.workMode) === workModeFilter)
       && matchesOfferInboxView(applicationsByJobId.get(job.id), inboxView)
     )) ?? [],
-    [jobs, filter, sourceFilter, contractFilter, workModeFilter, applicationsByJobId, inboxView],
+    [jobs, profile, filter, sourceFilter, workModeFilter, applicationsByJobId, inboxView],
   );
 
-  const providerNames = syncInfo?.providers
-    .filter((provider) => provider.configured !== false && provider.enabled !== false)
-    .map((provider) => provider.name)
-    .join(', ');
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [filter, inboxView, profile, sourceFilter, workModeFilter]);
+
+  const visibleJobs = displayed.slice(0, visibleCount);
+  const hiddenCount = Math.max(displayed.length - visibleJobs.length, 0);
+  const activeProviders = syncInfo?.providers.filter((provider) => provider.configured !== false && provider.enabled !== false) ?? [];
+  const contractSummary = profile?.acceptedContracts.length
+    ? profile.acceptedContracts.join(', ')
+    : 'Tous les contrats';
+
+  const toggleExpanded = (setter: typeof setExpandedApplicationIds, current: Set<number>, id: number): void => {
+    const next = new Set(current);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setter(next);
+  };
 
   return (
     <>
       <PageHeader
         title="Offres"
-        description="Examine l’offre, son score et les éléments de candidature déjà préparés depuis un seul espace."
+        description="Les offres qui correspondent à ton profil, prêtes à être examinées sans surcharge."
         actions={
           <div className="actions">
-            <Link className="btn secondary" href="/connecteurs">Gérer les connecteurs</Link>
-            <button
-              className="btn secondary"
-              type="button"
-              disabled={syncing}
-              onClick={() => void syncJobs(true)}
-            >
+            <button className="btn secondary" type="button" disabled={syncing} onClick={() => void syncJobs(true)}>
               {syncing ? 'Recherche en cours…' : 'Rechercher maintenant'}
             </button>
-            <button className="btn" type="button" onClick={() => setShow(true)}>
-              Ajouter une offre
-            </button>
+            <button className="btn" type="button" onClick={() => setShow(true)}>Ajouter une offre</button>
           </div>
         }
       />
       {error !== '' && <ErrorBox message={error} />}
 
       <Card>
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
           <div>
             <div className="actions" style={{ alignItems: 'center' }}>
-              <strong>Recherche automatique</strong>
-              <Badge tone={syncing ? 'blue' : 'good'}>
-                {syncing ? 'Mise à jour en arrière-plan' : 'Données locales affichées'}
-              </Badge>
-              {applications === null && <Badge>Suivi candidatures en cours…</Badge>}
+              <strong>Critères du profil</strong>
+              {profile?.acceptedContracts.map((contract) => <Badge key={contract} tone="blue">{contract}</Badge>)}
+              {profile?.acceptedContracts.length === 0 && <Badge>Tous les contrats</Badge>}
             </div>
-            <div className="muted small" style={{ marginTop: 7 }}>
-              {syncing
-                ? 'Les offres déjà synchronisées restent visibles pendant que JobPilot consulte les connecteurs actifs, normalise et fusionne les nouvelles occurrences.'
-                : syncInfo?.message ?? 'Les offres locales sont affichées en premier. La recherche automatique complète ensuite la liste sans bloquer la page.'}
+            <div className="small muted" style={{ marginTop: 6 }}>
+              Les contrats affichés viennent directement de la page Profil. Aucun filtre contrat séparé n’est appliqué ici.
             </div>
           </div>
-          <div className="small muted">
-            Dernière recherche : <strong>{formatDate(syncInfo?.lastSyncedAt)}</strong>
-          </div>
+          <Link className="btn secondary small" href="/profil">Modifier le profil</Link>
         </div>
+      </Card>
 
-        {syncInfo && (
-          <div className="actions" style={{ marginTop: 12 }}>
-            <Badge tone="blue">Sources : {providerNames || 'aucune'}</Badge>
-            {syncInfo.imported != null && <Badge tone="good">{syncInfo.imported} nouvelle(s)</Badge>}
-            {syncInfo.merged != null && <Badge tone="blue">{syncInfo.merged} source(s) fusionnée(s)</Badge>}
-            {syncInfo.duplicates != null && <Badge>{syncInfo.duplicates} occurrence(s) connue(s)</Badge>}
-            {syncInfo.failed != null && syncInfo.failed > 0 && <Badge tone="warn">{syncInfo.failed} échec(s)</Badge>}
+      <Card>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="actions" style={{ alignItems: 'center' }}>
+            <strong>Synchronisation</strong>
+            <Badge tone={syncing ? 'blue' : 'good'}>{syncing ? 'En cours' : 'À jour'}</Badge>
+            {syncInfo?.imported != null && <Badge tone="good">{syncInfo.imported} nouvelle(s)</Badge>}
+            {syncInfo?.merged != null && <Badge tone="blue">{syncInfo.merged} fusionnée(s)</Badge>}
+            {syncInfo?.failed != null && syncInfo.failed > 0 && <Badge tone="warn">{syncInfo.failed} échec(s)</Badge>}
           </div>
-        )}
-
-        {syncInfo?.errors && syncInfo.errors.length > 0 && (
-          <details style={{ marginTop: 10 }}>
-            <summary className="small muted">Détails des sources indisponibles</summary>
-            <ul>
-              {syncInfo.errors.map((syncError) => <li className="small" key={syncError}>{syncError}</li>)}
-            </ul>
+          <span className="small muted">Dernière recherche : {formatDate(syncInfo?.lastSyncedAt)}</span>
+        </div>
+        {syncInfo && (
+          <details style={{ marginTop: 10 }} open={syncing || undefined}>
+            <summary className="small muted">Détails de la synchronisation</summary>
+            <div className="small muted" style={{ marginTop: 8 }}>
+              {activeProviders.length} source{activeProviders.length > 1 ? 's' : ''} active{activeProviders.length > 1 ? 's' : ''}
+              {syncInfo.message ? ` · ${syncInfo.message}` : ''}
+            </div>
+            {syncInfo.errors && syncInfo.errors.length > 0 && (
+              <ul>{syncInfo.errors.map((syncError) => <li className="small" key={syncError}>{syncError}</li>)}</ul>
+            )}
           </details>
         )}
-
-        <p className="small muted" style={{ marginBottom: 0, marginTop: 12 }}>
-          Une nouvelle plateforme ajoute une occurrence à l’offre existante lorsqu’URL, entreprise et intitulé correspondent avec une confiance suffisante.
-        </p>
       </Card>
 
       <Card>
         <div className="form-grid">
           <label>
             Source
-            <select
-              aria-label="Filtrer par source"
-              value={sourceFilter}
-              onChange={(event) => setSourceFilter(event.target.value)}
-            >
+            <select aria-label="Filtrer par source" value={sourceFilter} onChange={(event) => setSourceFilter(event.target.value)}>
               <option value="all">Toutes les sources</option>
               {sources.map((source) => <option key={source} value={source}>{source}</option>)}
-            </select>
-          </label>
-          <label>
-            Contrat
-            <select
-              aria-label="Filtrer par contrat"
-              value={contractFilter}
-              onChange={(event) => changeContractFilter(event.target.value as ContractFilter)}
-            >
-              <option value="all">Tous les contrats</option>
-              <option value="freelance">Freelance</option>
-              <option value="cdi">CDI</option>
-              <option value="cdd">CDD</option>
             </select>
           </label>
           <label>
@@ -435,9 +392,6 @@ export default function JobsPage() {
             </select>
           </label>
         </div>
-        <div className="small muted" style={{ marginTop: 8 }}>
-          Les filtres Contrat et Mode de travail sont mémorisés sur cet appareil.
-        </div>
       </Card>
 
       <div className="tabs" aria-label="Boîte des offres">
@@ -446,12 +400,7 @@ export default function JobsPage() {
           ['submitted', 'Envoyées'],
           ['ignored', 'Ignorées'],
         ].map(([value, label]) => (
-          <button
-            key={value}
-            className={inboxView === value ? 'active' : ''}
-            type="button"
-            onClick={() => setInboxView(value as OfferInboxView)}
-          >
+          <button key={value} className={inboxView === value ? 'active' : ''} type="button" onClick={() => setInboxView(value as OfferInboxView)}>
             {label}
           </button>
         ))}
@@ -464,142 +413,123 @@ export default function JobsPage() {
           ['MATCHED', 'À examiner'],
           ['REJECTED_BY_FILTER', 'Exclues'],
         ].map(([value, label]) => (
-          <button
-            key={value}
-            className={filter === value ? 'active' : ''}
-            type="button"
-            onClick={() => setFilter(value)}
-          >
+          <button key={value} className={filter === value ? 'active' : ''} type="button" onClick={() => setFilter(value)}>
             {label}
           </button>
         ))}
       </div>
 
       <Card>
-        {jobs === null ? (
+        {jobs === null || profile === null ? (
           <Loading />
         ) : displayed.length === 0 ? (
-          <Empty>Aucune offre ne correspond aux filtres sélectionnés.</Empty>
+          <Empty>Aucune offre ne correspond à ton profil et aux filtres sélectionnés.</Empty>
         ) : (
-          displayed.map((job) => {
-            const jobOccurrences = occurrences(job);
-            const application = applicationsByJobId.get(job.id);
+          <>
+            <div className="small muted" style={{ marginBottom: 10 }}>
+              {displayed.length} offre{displayed.length > 1 ? 's' : ''} · contrats du profil : <strong>{contractSummary}</strong>
+            </div>
+            {visibleJobs.map((job) => {
+              const jobOccurrences = occurrences(job);
+              const application = applicationsByJobId.get(job.id);
+              const applicationExpanded = expandedApplicationIds.has(job.id);
+              const sourcesExpanded = expandedSourceIds.has(job.id);
 
-            return (
-              <div className="list-row" key={job.id}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="actions" style={{ marginBottom: 6 }}>
-                    <Badge tone={tone(job.status)}>{job.status}</Badge>
-                    <Badge tone="blue">{job.language === 'fr' ? 'FR' : 'EN'}</Badge>
-                    <Badge>{job.contractType || 'Contrat inconnu'}</Badge>
-                    <Badge tone={jobOccurrences.length > 1 ? 'blue' : 'neutral'}>
-                      {jobOccurrences.length} source{jobOccurrences.length > 1 ? 's' : ''}
-                    </Badge>
-                    {jobOccurrences.slice(0, 4).map((source) => (
-                      <Badge key={`${source.sourceCode}-${source.externalId || source.sourceUrl || source.sourceName}`}>
-                        {source.sourceName}
-                      </Badge>
-                    ))}
-                    {jobOccurrences.length > 4 && <Badge>+{jobOccurrences.length - 4}</Badge>}
-                    {job.proposedTjm != null && <Badge tone="good">TJM proposé : {job.proposedTjm} €</Badge>}
-                    {job.proposedSalary != null && (
-                      <Badge tone="good">Salaire proposé : {job.proposedSalary.toLocaleString('fr-FR')} €</Badge>
-                    )}
-                  </div>
-                  <h3>{job.title}</h3>
-                  <div className="muted small">
-                    {job.company || 'Entreprise non renseignée'} · {job.location || 'Lieu non renseigné'} · {age(job)}
-                  </div>
-                  {job.recommendedCv && (
-                    <div className="small" style={{ marginTop: 7 }}>
-                      CV conseillé : <strong>{job.recommendedCv.name}</strong>
+              return (
+                <div className="list-row" key={job.id}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="actions" style={{ marginBottom: 6 }}>
+                      <Badge tone={tone(job.status)}>{job.status}</Badge>
+                      <Badge>{job.contractType || 'Contrat inconnu'}</Badge>
+                      <Badge>{job.workMode || 'Mode inconnu'}</Badge>
+                      {jobOccurrences.slice(0, 2).map((source) => (
+                        <Badge key={`${source.sourceCode}-${source.externalId || source.sourceUrl || source.sourceName}`}>{source.sourceName}</Badge>
+                      ))}
+                      {jobOccurrences.length > 2 && <Badge>+{jobOccurrences.length - 2} source(s)</Badge>}
                     </div>
-                  )}
-                  {application && (
-                    <OfferApplicationSummary
-                      application={application}
-                      onApplicationUpdated={updateApplication}
-                    />
-                  )}
-                  <details style={{ marginTop: 8 }}>
-                    <summary className="small muted">Pourquoi ce score ?</summary>
-                    <ul>{(job.scoreReasons ?? []).map((reason) => <li key={reason} className="small">{reason}</li>)}</ul>
-                  </details>
-                  <details style={{ marginTop: 8 }}>
-                    <summary className="small muted">
-                      Sources de cette offre ({jobOccurrences.length})
-                    </summary>
-                    <div className="stack" style={{ gap: 8, marginTop: 10 }}>
-                      {jobOccurrences.map((source) => (
-                        <div className="notice" key={`${source.sourceCode}-${source.externalId || source.sourceUrl || source.sourceName}`}>
-                          <div className="actions">
+                    <h3 style={{ marginBottom: 4 }}>{job.title}</h3>
+                    <div className="muted small">
+                      {job.company || 'Entreprise non renseignée'} · {job.location || 'Lieu non renseigné'} · {age(job)}
+                    </div>
+                    {(job.proposedTjm != null || job.proposedSalary != null) && (
+                      <div className="actions" style={{ marginTop: 7 }}>
+                        {job.proposedTjm != null && <Badge tone="good">TJM proposé : {job.proposedTjm} €</Badge>}
+                        {job.proposedSalary != null && <Badge tone="good">Salaire proposé : {job.proposedSalary.toLocaleString('fr-FR')} €</Badge>}
+                      </div>
+                    )}
+
+                    <div className="actions" style={{ marginTop: 10 }}>
+                      {job.sourceUrl && (
+                        <a className="btn secondary small" href={job.sourceUrl} target="_blank" rel="noreferrer">Ouvrir l’offre</a>
+                      )}
+                      {application && (
+                        <button
+                          className="btn secondary small"
+                          type="button"
+                          aria-expanded={applicationExpanded}
+                          onClick={() => toggleExpanded(setExpandedApplicationIds, expandedApplicationIds, job.id)}
+                        >
+                          {applicationExpanded ? 'Masquer la candidature' : 'Voir la candidature'}
+                        </button>
+                      )}
+                      {jobOccurrences.length > 1 && (
+                        <button
+                          className="btn secondary small"
+                          type="button"
+                          aria-expanded={sourcesExpanded}
+                          onClick={() => toggleExpanded(setExpandedSourceIds, expandedSourceIds, job.id)}
+                        >
+                          {sourcesExpanded ? 'Masquer les sources' : `Voir les ${jobOccurrences.length} sources`}
+                        </button>
+                      )}
+                      {job.status !== 'PREPARED' && job.status !== 'REJECTED_BY_FILTER' && (
+                        <button className="btn small" type="button" onClick={() => void prepare(job.id)}>Préparer</button>
+                      )}
+                    </div>
+
+                    {application && applicationExpanded && (
+                      <div style={{ marginTop: 10 }}>
+                        <OfferApplicationSummary application={application} onApplicationUpdated={updateApplication} />
+                      </div>
+                    )}
+
+                    {sourcesExpanded && (
+                      <div className="stack" style={{ gap: 8, marginTop: 10 }}>
+                        {jobOccurrences.map((source) => (
+                          <div className="notice" key={`${source.sourceCode}-${source.externalId || source.sourceUrl || source.sourceName}`}>
                             <strong>{source.sourceName}</strong>
-                            <Badge tone={source.matchType === 'PRIMARY' || source.matchType === 'LEGACY' ? 'neutral' : 'blue'}>
-                              {matchLabel(source.matchType)}
-                            </Badge>
-                            {source.matchType !== 'PRIMARY' && source.matchType !== 'LEGACY' && (
-                              <Badge>{source.matchScore} %</Badge>
+                            {source.sourceUrl && (
+                              <> · <a href={source.sourceUrl} target="_blank" rel="noreferrer">ouvrir</a></>
                             )}
                           </div>
-                          {source.matchReasons.length > 0 && (
-                            <div className="small muted" style={{ marginTop: 6 }}>
-                              {source.matchReasons.join(' ')}
-                            </div>
-                          )}
-                          {source.sourceUrl && (
-                            <a
-                              className="btn secondary small"
-                              href={source.sourceUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              style={{ marginTop: 8 }}
-                            >
-                              Ouvrir sur {source.sourceName}
-                            </a>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </details>
-                  <div className="actions" style={{ marginTop: 10 }}>
-                    {job.sourceUrl && (
-                      <a className="btn secondary small" href={job.sourceUrl} target="_blank" rel="noreferrer">
-                        Ouvrir la source principale
-                      </a>
-                    )}
-                    {job.status !== 'PREPARED' && job.status !== 'REJECTED_BY_FILTER' && (
-                      <button className="btn small" type="button" onClick={() => void prepare(job.id)}>
-                        Préparer
-                      </button>
+                        ))}
+                      </div>
                     )}
                   </div>
+                  <div className="score" aria-label={`Score ${job.score}`}>{job.score}</div>
                 </div>
-                <div className="score" aria-label={`Score ${job.score}`}>{job.score}</div>
-              </div>
-            );
-          })
-        )}
+              );
+            })}
 
-        {jobs?.some((job) => occurrences(job).some((source) => source.sourceName === 'Adzuna')) && (
-          <p className="small muted" style={{ marginBottom: 0, marginTop: 16 }}>
-            Jobs by <a href="https://www.adzuna.fr" target="_blank" rel="noreferrer">Adzuna</a>
-          </p>
+            {hiddenCount > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+                <button className="btn secondary" type="button" onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}>
+                  Afficher {Math.min(PAGE_SIZE, hiddenCount)} offre{Math.min(PAGE_SIZE, hiddenCount) > 1 ? 's' : ''} de plus
+                </button>
+              </div>
+            )}
+          </>
         )}
       </Card>
 
+      {jobs?.some((job) => occurrences(job).some((source) => source.sourceName === 'Adzuna')) && (
+        <p className="small muted">Jobs by <a href="https://www.adzuna.fr" target="_blank" rel="noreferrer">Adzuna</a></p>
+      )}
+
       {show && (
         <div className="modal-backdrop" onMouseDown={() => setShow(false)}>
-          <div
-            className="modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Ajouter une offre"
-            onMouseDown={(event) => event.stopPropagation()}
-          >
-            <PageHeader
-              title="Ajouter une offre"
-              actions={<button className="btn secondary" type="button" onClick={() => setShow(false)}>Fermer</button>}
-            />
+          <div className="modal" role="dialog" aria-modal="true" aria-label="Ajouter une offre" onMouseDown={(event) => event.stopPropagation()}>
+            <PageHeader title="Ajouter une offre" actions={<button className="btn secondary" type="button" onClick={() => setShow(false)}>Fermer</button>} />
             <form className="form-grid" onSubmit={(event) => void submit(event)}>
               <label>Source<input value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} /></label>
               <label>URL<input value={form.sourceUrl} onChange={(e) => setForm({ ...form, sourceUrl: e.target.value })} /></label>
@@ -610,7 +540,7 @@ export default function JobsPage() {
               <label>
                 Contrat
                 <select value={form.contractType} onChange={(e) => setForm({ ...form, contractType: e.target.value })}>
-                  <option>CDI</option><option>CDD</option><option>Freelance</option><option>Portage salarial</option><option>Sous-traitance</option>
+                  <option>Freelance</option><option>Portage salarial</option><option>Sous-traitance</option><option>CDI</option><option>CDD</option>
                 </select>
               </label>
               <label>Mode de travail<input value={form.workMode} onChange={(e) => setForm({ ...form, workMode: e.target.value })} /></label>
