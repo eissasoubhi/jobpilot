@@ -1,5 +1,5 @@
 .workspace {
-  padding-bottom: 90px;
+  padding-bottom: 96px;
 }
 
 .screenReaderStatus {
@@ -16,93 +16,103 @@
 
 .decisionBar {
   position: fixed;
-  left: 286px;
-  right: 34px;
-  bottom: 14px;
+  left: 284px;
+  right: 36px;
+  bottom: 16px;
   z-index: 40;
-  max-width: 1432px;
+  max-width: 1428px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: minmax(190px, 1fr) auto minmax(190px, 1fr);
   align-items: center;
-  gap: 14px;
-  padding: 10px;
-  border: 1px solid #dbe1ec;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, .97);
-  box-shadow: 0 14px 38px rgba(25, 39, 77, .18);
-  backdrop-filter: blur(12px);
+  gap: var(--jp-space-3);
+  padding: var(--jp-space-2);
+  border: 1px solid var(--jp-color-border-strong);
+  border-radius: var(--jp-radius-lg);
+  background: rgba(255, 255, 255, .96);
+  box-shadow: var(--jp-shadow-lg);
+  backdrop-filter: blur(14px);
 }
 
 .decisionButton {
-  min-height: 52px;
+  min-height: 50px;
   border: 1px solid transparent;
-  border-radius: 11px;
+  border-radius: var(--jp-radius-md);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
+  gap: var(--jp-space-2);
   padding: 10px 18px;
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 780;
   cursor: pointer;
-  transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+  transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease, background .12s ease;
 }
 
 .decisionButton:not(:disabled):hover {
   transform: translateY(-1px);
 }
 
+.decisionButton:focus-visible,
+.navButton:focus-visible {
+  outline: 3px solid rgba(67, 89, 216, .18);
+  outline-offset: 2px;
+}
+
 .decisionButton:disabled,
 .navButton:disabled {
   cursor: not-allowed;
-  opacity: .52;
+  opacity: .5;
 }
 
 .rejectButton {
   justify-self: stretch;
-  background: #fff0ef;
-  border-color: #f4c7c3;
-  color: #a61b13;
+  background: var(--jp-color-danger-soft);
+  border-color: #f2c9c5;
+  color: var(--jp-color-danger);
 }
 
 .rejectButton:not(:disabled):hover {
-  box-shadow: 0 7px 18px rgba(180, 35, 24, .14);
+  background: #ffe9e6;
+  box-shadow: 0 7px 18px rgba(180, 35, 24, .12);
 }
 
 .sentButton {
   justify-self: stretch;
-  background: #147d50;
-  border-color: #147d50;
+  background: var(--jp-color-success);
+  border-color: var(--jp-color-success);
   color: #fff;
 }
 
 .sentButton:not(:disabled):hover {
-  box-shadow: 0 7px 18px rgba(20, 125, 80, .2);
+  background: #106b44;
+  box-shadow: 0 7px 18px rgba(20, 125, 80, .18);
 }
 
 .secondaryNavigation {
   display: grid;
-  grid-template-columns: auto minmax(94px, 150px) auto;
+  grid-template-columns: auto minmax(104px, 160px) auto;
   align-items: center;
   gap: 7px;
 }
 
 .navButton {
-  min-height: 32px;
-  border: 1px solid #d7dde8;
-  border-radius: 8px;
-  background: #fff;
-  color: #667085;
-  padding: 5px 8px;
+  min-height: 34px;
+  border: 1px solid var(--jp-color-border);
+  border-radius: var(--jp-radius-sm);
+  background: var(--jp-color-surface);
+  color: var(--jp-color-text-subtle);
+  padding: 5px 9px;
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
+  transition: border-color .12s ease, background .12s ease, color .12s ease;
 }
 
 .navButton:not(:disabled):hover {
-  color: #334155;
-  border-color: #b9c3d4;
+  color: var(--jp-color-text);
+  border-color: var(--jp-color-border-strong);
+  background: var(--jp-color-surface-subtle);
 }
 
 .progressBlock {
@@ -115,8 +125,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  color: #667085;
+  gap: var(--jp-space-2);
+  color: var(--jp-color-text-subtle);
   font-size: 10px;
 }
 
@@ -128,7 +138,7 @@
 .progressTrack {
   height: 4px;
   overflow: hidden;
-  border-radius: 999px;
+  border-radius: var(--jp-radius-pill);
   background: #e8ecf4;
 }
 
@@ -136,17 +146,17 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: #94a3b8;
+  background: var(--jp-color-primary);
   transition: width .2s ease;
 }
 
 .decisionError {
   grid-column: 1 / -1;
   margin-top: -3px;
-  padding: 6px 9px;
-  border-radius: 8px;
-  background: #fff0ef;
-  color: #b42318;
+  padding: 7px 10px;
+  border-radius: var(--jp-radius-sm);
+  background: var(--jp-color-danger-soft);
+  color: var(--jp-color-danger);
   font-size: 11px;
   text-align: center;
 }
@@ -170,8 +180,8 @@
     right: 12px;
     bottom: 10px;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    padding: 8px;
+    gap: var(--jp-space-2);
+    padding: var(--jp-space-2);
   }
 
   .decisionButton {
