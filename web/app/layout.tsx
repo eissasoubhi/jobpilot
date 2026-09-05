@@ -5,6 +5,7 @@ import { Shell } from '@/components/Shell';
 
 import './globals.css';
 import './design-system.css';
+import './shell.css';
 
 export const metadata: Metadata = {
   title: 'JobPilot',
