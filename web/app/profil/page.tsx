@@ -8,7 +8,7 @@ import { getErrorMessage } from '@/lib/errors';
 import type { Profile } from '@/lib/types';
 
 const splitLines = (value: string): string[] => value.split('\n').map((item) => item.trim()).filter(Boolean);
-const contractOptions = ['Freelance', 'CDI', 'CDD'] as const;
+const contractOptions = ['Freelance', 'Portage salarial', 'Sous-traitance', 'CDI', 'CDD'] as const;
 const workModeOptions = [
   'Aucune préférence',
   'Télétravail uniquement',
