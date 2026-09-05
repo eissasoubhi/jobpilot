@@ -21,7 +21,7 @@ const navigation: readonly NavigationGroup[] = [
     links: [
       ['/', 'Tableau de bord', '⌂'],
       ['/offres', 'Offres', '◎'],
-      ['/offres/review', 'Review Queue', '▶'],
+      ['/offres/review', 'Revue des offres', '▶'],
       ['/candidatures', 'Candidatures', '✓'],
     ],
   },
@@ -33,7 +33,7 @@ const navigation: readonly NavigationGroup[] = [
     ],
   },
   {
-    label: 'CRM & suivi',
+    label: 'CRM et suivi',
     links: [
       ['/parcours-candidatures', 'Parcours candidatures', '↝'],
       ['/positionnements', 'Positionnements', '⇄'],
@@ -53,7 +53,7 @@ const navigation: readonly NavigationGroup[] = [
   {
     label: 'Configuration',
     links: [
-      ['/parametres/integrations', 'Configuration & clés API', '⚙'],
+      ['/parametres/integrations', 'Clés API et IA', '⚙'],
       ['/parametres/scraping', 'Scraping personnalisé', '⌘'],
       ['/cv', 'Mes CV', '▤'],
       ['/profil', 'Profil', '◉'],
