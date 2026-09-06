@@ -141,7 +141,8 @@ describe('ReviewQueueApplicationCard', () => {
     expect(screen.queryByText('Lettre de motivation préparée.')).not.toBeInTheDocument();
     expect(screen.queryByText('PDF')).not.toBeInTheDocument();
     expect(screen.queryByText('Word (.docx)')).not.toBeInTheDocument();
-    expect(screen.getAllByText('Prête à envoyer')).toHaveLength(2);
+    expect(screen.getByText('Prête à envoyer', { selector: 'div' })).toBeInTheDocument();
+    expect(within(applicationSummary).getByText('Prête à envoyer')).toBeInTheDocument();
     expect(screen.queryByText('PRÊTE À ENVOYER')).not.toBeInTheDocument();
   });
 
