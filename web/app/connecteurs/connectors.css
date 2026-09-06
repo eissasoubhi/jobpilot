@@ -1,0 +1,88 @@
+/* Scoped operational treatment for /connecteurs. */
+ul[aria-label="Connecteurs disponibles"] {
+  overflow: hidden;
+  border: 1px solid var(--color-border, var(--line));
+  border-radius: var(--radius-lg, 12px);
+  background: var(--color-surface, var(--panel));
+}
+
+ul[aria-label="Connecteurs disponibles"] > li {
+  gap: var(--space-3, 12px);
+  padding: var(--space-4, 16px);
+  border-bottom: 1px solid var(--color-border, var(--line));
+  background: var(--color-surface, var(--panel));
+}
+
+ul[aria-label="Connecteurs disponibles"] > li:last-child {
+  border-bottom: 0;
+}
+
+ul[aria-label="Connecteurs disponibles"] h3 {
+  margin: 0;
+  color: var(--color-text, var(--text));
+  font-size: 1rem;
+  line-height: 1.35;
+  letter-spacing: -.01em;
+}
+
+ul[aria-label="Connecteurs disponibles"] .actions {
+  gap: var(--space-1, 4px) var(--space-2, 8px);
+}
+
+ul[aria-label="Connecteurs disponibles"] .badge {
+  min-height: 22px;
+  padding-inline: 8px;
+  font-size: .6875rem;
+}
+
+ul[aria-label="Connecteurs disponibles"] p.small {
+  max-width: var(--reading-width, 72ch);
+  color: var(--color-text-muted, var(--muted));
+  line-height: 1.5;
+}
+
+ul[aria-label="Connecteurs disponibles"] code {
+  font-size: .75rem;
+}
+
+ul[aria-label="Connecteurs disponibles"] .notice,
+ul[aria-label="Connecteurs disponibles"] details[open] {
+  border-color: var(--color-border, var(--line));
+  background: var(--color-surface-data, #fbfcfe);
+}
+
+ul[aria-label="Connecteurs disponibles"] button:focus-visible,
+ul[aria-label="Connecteurs disponibles"] a:focus-visible,
+ul[aria-label="Connecteurs disponibles"] summary:focus-visible {
+  outline: var(--focus-ring, 2px solid #2563eb);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  ul[aria-label="Connecteurs disponibles"] > li:hover {
+    background: var(--color-surface-data, #fbfcfe);
+  }
+}
+
+@media (max-width: 760px) {
+  ul[aria-label="Connecteurs disponibles"] {
+    border-radius: var(--radius-md, 10px);
+  }
+
+  ul[aria-label="Connecteurs disponibles"] > li {
+    padding: var(--space-3, 12px);
+  }
+
+  ul[aria-label="Connecteurs disponibles"] .actions:last-child > button,
+  ul[aria-label="Connecteurs disponibles"] .actions:last-child > a {
+    flex: 1 1 140px;
+    min-height: 44px;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ul[aria-label="Connecteurs disponibles"] > li {
+    transition: none;
+  }
+}
