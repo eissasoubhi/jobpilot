@@ -62,7 +62,7 @@ describe('Review Queue motivation message', () => {
 
     expect(screen.queryByText('Message court déjà préparé.')).not.toBeInTheDocument();
     const applicationSummary = screen.getByRole('region', { name: 'Candidature prête' });
-    expect(within(applicationSummary).getByText('Message court')).toBeInTheDocument();
+    expect(within(applicationSummary).getByText('Message court', { selector: 'span' })).toBeInTheDocument();
     expect(within(applicationSummary).getByText('Prêt · 27 caractères')).toBeInTheDocument();
     expect(screen.queryByRole('spinbutton', { name: 'Longueur maximale du message court' })).not.toBeInTheDocument();
 
