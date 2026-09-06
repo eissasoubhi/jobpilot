@@ -5,6 +5,7 @@ const apiInternalUrl =
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  output: 'standalone',
 
   async rewrites() {
     return [

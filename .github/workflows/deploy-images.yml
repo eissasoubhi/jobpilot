@@ -1,0 +1,90 @@
+name: Deployment images
+
+on:
+  pull_request:
+    branches: [source]
+    paths:
+      - 'api/**'
+      - 'web/**'
+      - 'browser-worker/**'
+      - 'deploy/**'
+      - '.github/workflows/deploy-images.yml'
+  push:
+    branches: [source]
+    paths:
+      - 'api/**'
+      - 'web/**'
+      - 'browser-worker/**'
+      - 'deploy/**'
+      - '.github/workflows/deploy-images.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deployment-images-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  compose:
+    name: Validate deployment Compose
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate deployment configuration
+        run: docker compose --env-file deploy/.env.example -f deploy/compose.yml config --quiet
+
+  images:
+    name: Build ${{ matrix.image }}
+    needs: compose
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: jobpilot-api
+            context: ./api
+            dockerfile: ./api/Dockerfile.prod
+          - image: jobpilot-web
+            context: ./web
+            dockerfile: ./web/Dockerfile.prod
+          - image: jobpilot-browser-worker
+            context: ./browser-worker
+            dockerfile: ./browser-worker/Dockerfile
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        if: github.event_name != 'pull_request'
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and publish
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:source
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
