@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 
 import '@/app/offres/data-dense.css';
 
-import { Badge, Button, Card, DataList, DataListItem } from '@/components/UI';
+import { Badge, Button, ButtonLink, Card, DataList, DataListItem } from '@/components/UI';
 
 const meta = {
   title: 'Offres/Data-dense inbox',
@@ -10,7 +10,7 @@ const meta = {
     docs: {
       description: {
         component:
-          'Référence de densité pour la boîte des offres : ligne compacte, score fixe, métadonnées secondaires calmées et détails disponibles sans concurrencer la décision principale.',
+          'Référence de densité pour la boîte des offres : ligne compacte, score fixe, métadonnées secondaires calmées et accès explicite au détail Editorial sans concurrencer la décision principale.',
       },
     },
   },
@@ -56,7 +56,7 @@ function OfferRow({
           </ul>
         </details>
         <div className="actions" style={{ marginTop: 8 }}>
-          <Button size="small" variant="secondary">Ouvrir l’offre</Button>
+          <ButtonLink href="/offres/42" size="small" variant="secondary">Voir le détail</ButtonLink>
           {status !== 'Préparée' && <Button size="small">Préparer</Button>}
         </div>
       </div>
