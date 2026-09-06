@@ -5,6 +5,8 @@ import {
 } from '@/lib/crm';
 import type { CrmOrganization } from '@/lib/types';
 
+import styles from './CrmOrganizationCard.module.css';
+
 function formatDate(value?: string | null): string {
   if (!value) return 'Aucune activité datée';
 
@@ -51,19 +53,19 @@ export function CrmOrganizationCard({
   const note = organization.annotation?.note?.trim() ?? '';
 
   return (
-    <Card>
-      <article aria-labelledby={`crm-organization-${organization.key}`}>
-        <div className="actions" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+    <Card className={styles.card}>
+      <article className={styles.organization} aria-labelledby={`crm-organization-${organization.key}`}>
+        <div className={`actions ${styles.header}`}>
           <div>
-            <h2 id={`crm-organization-${organization.key}`} style={{ marginBottom: 7 }}>
+            <h2 id={`crm-organization-${organization.key}`} className={styles.title}>
               {organization.name}
             </h2>
             {hasCorrectedName && (
-              <div className="small muted" style={{ marginBottom: 7 }}>
+              <div className={`small muted ${styles.sourceName}`}>
                 Nom source : {organization.sourceName}
               </div>
             )}
-            <div className="actions">
+            <div className={`actions ${styles.metaBadges}`}>
               {organization.roles.map((role) => (
                 <Badge key={role} tone="blue">{crmOrganizationRoleLabel(role)}</Badge>
               ))}
@@ -71,14 +73,14 @@ export function CrmOrganizationCard({
               {note !== '' && <Badge tone="good">Note CRM</Badge>}
             </div>
           </div>
-          <div className="small muted" style={{ textAlign: 'right' }}>
+          <div className={`small muted ${styles.activity}`}>
             Dernière activité<br />
             <strong>{formatDate(organization.lastActivityAt)}</strong>
           </div>
         </div>
 
         {note !== '' && (
-          <div className="notice" style={{ marginTop: 14, whiteSpace: 'pre-wrap' }}>
+          <div className={styles.note}>
             <strong>Note CRM</strong>
             <div style={{ marginTop: 5 }}>{note}</div>
             {organization.annotation?.updatedAt && (
@@ -90,7 +92,7 @@ export function CrmOrganizationCard({
         )}
 
         {onEditAnnotation && (
-          <div className="actions" style={{ marginTop: 12 }}>
+          <div className={`actions ${styles.annotationAction}`}>
             <Button
               variant="secondary"
               size="small"
@@ -101,7 +103,7 @@ export function CrmOrganizationCard({
           </div>
         )}
 
-        <div className="actions" style={{ marginTop: 14 }}>
+        <div className={`actions ${styles.counts}`}>
           <Badge>{organization.offerCount} offre{organization.offerCount > 1 ? 's' : ''}</Badge>
           <Badge>{organization.applicationCount} candidature{organization.applicationCount > 1 ? 's' : ''}</Badge>
           <Badge>{organization.positioningCount} positionnement{organization.positioningCount > 1 ? 's' : ''}</Badge>
@@ -111,17 +113,17 @@ export function CrmOrganizationCard({
           </Badge>
         </div>
 
-        <div className="grid two" style={{ marginTop: 18 }}>
-          <section aria-labelledby={`crm-contacts-${organization.key}`}>
+        <div className={`grid two ${styles.detailGrid}`}>
+          <section className={styles.section} aria-labelledby={`crm-contacts-${organization.key}`}>
             <h3 id={`crm-contacts-${organization.key}`}>Contacts validés</h3>
             {organization.contacts.length === 0 ? (
               <div className="notice" style={{ marginTop: 9 }}>
                 Aucun contact validé pour cette organisation.
               </div>
             ) : (
-              <div className="stack" style={{ marginTop: 9 }}>
+              <div className={`stack ${styles.compactStack}`}>
                 {organization.contacts.map((contact) => (
-                  <div className="list-row" key={contact.key} style={{ paddingTop: 9, paddingBottom: 9 }}>
+                  <div className={`list-row ${styles.compactRow}`} key={contact.key}>
                     <div style={{ flex: 1 }}>
                       <strong>{contact.name || contact.email || contact.phone}</strong>
                       <div className="small" style={{ marginTop: 4 }}>
@@ -149,13 +151,13 @@ export function CrmOrganizationCard({
             )}
           </section>
 
-          <section aria-labelledby={`crm-workflow-${organization.key}`}>
+          <section className={styles.section} aria-labelledby={`crm-workflow-${organization.key}`}>
             <h3 id={`crm-workflow-${organization.key}`}>État du parcours</h3>
             {statusEntries(organization.applicationStatuses).length === 0
               && statusEntries(organization.positioningStatuses).length === 0 ? (
                 <div className="notice" style={{ marginTop: 9 }}>Aucun statut de suivi disponible.</div>
               ) : (
-                <div className="stack" style={{ marginTop: 9 }}>
+                <div className={`stack ${styles.compactStack}`}>
                   {statusEntries(organization.applicationStatuses).length > 0 && (
                     <div>
                       <strong className="small">Candidatures</strong>
@@ -181,14 +183,14 @@ export function CrmOrganizationCard({
           </section>
         </div>
 
-        <section aria-labelledby={`crm-offers-${organization.key}`} style={{ marginTop: 18 }}>
+        <section className={styles.latestOffers} aria-labelledby={`crm-offers-${organization.key}`}>
           <h3 id={`crm-offers-${organization.key}`}>Offres récentes associées</h3>
           {organization.latestOffers.length === 0 ? (
             <div className="small muted" style={{ marginTop: 7 }}>Aucune offre associée.</div>
           ) : (
-            <div className="stack" style={{ marginTop: 7 }}>
+            <div className={`stack ${styles.compactStack}`}>
               {organization.latestOffers.map((offer, index) => (
-                <div className="list-row" key={`${offer.id ?? 'offer'}-${offer.title}-${index}`} style={{ paddingTop: 8, paddingBottom: 8 }}>
+                <div className={`list-row ${styles.compactRow}`} key={`${offer.id ?? 'offer'}-${offer.title}-${index}`}>
                   <div style={{ flex: 1 }}>
                     <strong>{offer.title}</strong>
                     <div className="actions" style={{ marginTop: 6 }}>
