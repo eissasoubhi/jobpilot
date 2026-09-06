@@ -9,6 +9,7 @@ import { OfferApplicationSummary } from '@/components/OfferApplicationSummary';
 import {
   Badge,
   Button,
+  ButtonLink,
   Card,
   DataList,
   DataListItem,
@@ -577,6 +578,9 @@ export default function JobsPage() {
                           </div>
                         </details>
                         <div className="actions" style={{ marginTop: 10 }}>
+                          <ButtonLink href={`/offres/${job.id}`} size="small" variant="secondary">
+                            Voir le détail
+                          </ButtonLink>
                           {job.sourceUrl && (
                             <a className="btn secondary small" href={job.sourceUrl} target="_blank" rel="noreferrer">
                               Ouvrir la source principale
