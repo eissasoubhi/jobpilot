@@ -133,8 +133,8 @@ describe('ReviewQueueApplicationCard', () => {
     expect(screen.getByRole('link', { name: 'Ouvrir le CV' })).toHaveAttribute('href', '/api/cvs/3/download');
     expect(screen.queryByText('Ce message préparé est disponible dans la Review Queue.')).not.toBeInTheDocument();
     const applicationSummary = screen.getByRole('region', { name: 'Candidature prête' });
-    expect(within(applicationSummary).getByText('Message court')).toBeInTheDocument();
-    expect(within(applicationSummary).getByText('Lettre de motivation')).toBeInTheDocument();
+    expect(within(applicationSummary).getByText('Message court', { selector: 'span' })).toBeInTheDocument();
+    expect(within(applicationSummary).getByText('Lettre de motivation', { selector: 'span' })).toBeInTheDocument();
     expect(within(applicationSummary).getByText('Prête · 4 mots')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Voir les textes' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Message court' })).toBeInTheDocument();
