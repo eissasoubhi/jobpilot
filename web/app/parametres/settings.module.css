@@ -4,22 +4,46 @@
 
 .sectionGap + :global(.grid.cols-2) {
   align-items: start;
+  gap: var(--space-5, 1.25rem);
 }
 
 .sectionGap + :global(.grid.cols-2) > :global(.card) {
   min-width: 0;
+  border-color: var(--color-border, var(--line));
+  background: var(--color-surface, var(--panel));
+  box-shadow: var(--shadow-card, 0 4px 18px rgba(25, 39, 77, .04));
+}
+
+.sectionGap + :global(.grid.cols-2) > :global(.card):first-child {
+  background: var(--color-surface-subtle, #f8fafc);
 }
 
 .sectionGap + :global(.grid.cols-2) :global(.actions) {
   align-items: center;
+  gap: var(--space-2, .5rem);
 }
 
 .sectionGap + :global(.grid.cols-2) code {
   overflow-wrap: anywhere;
+  font-size: .75rem;
+}
+
+.sectionGap + :global(.grid.cols-2) :global(.form-grid) {
+  gap: var(--space-3, .75rem) var(--space-4, 1rem);
+}
+
+.sectionGap + :global(.grid.cols-2) :global(input:focus-visible),
+.sectionGap + :global(.grid.cols-2) :global(select:focus-visible),
+.sectionGap + :global(.grid.cols-2) :global(textarea:focus-visible),
+.sectionGap + :global(.grid.cols-2) :global(button:focus-visible),
+.sectionGap + :global(.grid.cols-2) :global(a:focus-visible) {
+  outline: var(--focus-ring, 2px solid #2563eb);
+  outline-offset: 2px;
 }
 
 .platformsCard {
   margin-top: var(--space-5, 1.25rem);
+  border-color: var(--color-border, var(--line));
 }
 
 .platformsToolbar {
@@ -27,8 +51,9 @@
 }
 
 .platformsSummary {
-  color: var(--text-muted, #64748b);
+  color: var(--color-text-muted, var(--text-muted, #64748b));
   font-size: var(--text-sm, 0.875rem);
+  line-height: 1.45;
 }
 
 .platformItem {
@@ -36,6 +61,7 @@
   grid-template-columns: minmax(0, 1.5fr) minmax(8rem, 0.7fr) minmax(8rem, 0.8fr) auto;
   gap: var(--space-3, 0.75rem);
   align-items: center;
+  min-height: var(--data-row-min-height, 52px);
 }
 
 .platformName,
@@ -44,11 +70,16 @@
   overflow-wrap: anywhere;
 }
 
+.platformName {
+  color: var(--color-text, var(--text));
+  font-weight: 700;
+}
+
 .platformMetaLabel {
   display: none;
-  color: var(--text-muted, #64748b);
+  color: var(--color-text-muted, var(--text-muted, #64748b));
   font-size: var(--text-xs, 0.75rem);
-  font-weight: 600;
+  font-weight: 650;
 }
 
 .platformAction {
@@ -57,6 +88,7 @@
 
 .emailPreviewBody {
   min-height: 15rem;
+  line-height: 1.55;
 }
 
 .noticeStack {
@@ -67,6 +99,12 @@
 
 .gmailReconnect {
   margin-top: var(--space-3, 0.75rem);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .platformItem:hover {
+    background: var(--color-surface-data, #fbfcfe);
+  }
 }
 
 @media (max-width: 1100px) {
@@ -103,12 +141,17 @@
 }
 
 @media (max-width: 600px) {
+  .sectionGap + :global(.grid.cols-2) {
+    gap: var(--space-3, .75rem);
+  }
+
   .sectionGap + :global(.grid.cols-2) :global(.form-grid) {
     grid-template-columns: minmax(0, 1fr);
   }
 
   .sectionGap + :global(.grid.cols-2) input:not([type='checkbox']),
-  .sectionGap + :global(.grid.cols-2) select {
+  .sectionGap + :global(.grid.cols-2) select,
+  .sectionGap + :global(.grid.cols-2) textarea {
     min-height: 2.75rem;
   }
 
@@ -128,6 +171,7 @@
 
   .platformItem {
     grid-template-columns: minmax(0, 1fr);
+    padding-block: var(--space-2, .5rem);
   }
 
   .platformAction {
@@ -140,5 +184,11 @@
     width: 100%;
     min-height: 2.75rem;
     justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .platformItem {
+    transition: none;
   }
 }
