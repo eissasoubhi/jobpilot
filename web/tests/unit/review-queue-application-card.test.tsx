@@ -132,10 +132,10 @@ describe('ReviewQueueApplicationCard', () => {
     expect(screen.getByRole('link', { name: 'Ouvrir l’offre' })).toHaveAttribute('href', 'https://example.test/jobs/7');
     expect(screen.getByRole('link', { name: 'Ouvrir le CV' })).toHaveAttribute('href', '/api/cvs/3/download');
     expect(screen.queryByText('Ce message préparé est disponible dans la Review Queue.')).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Candidature prête' })).toBeInTheDocument();
-    expect(screen.getByText('Message court')).toBeInTheDocument();
-    expect(screen.getByText('Lettre de motivation')).toBeInTheDocument();
-    expect(screen.getByText('Prête · 4 mots')).toBeInTheDocument();
+    const applicationSummary = screen.getByRole('region', { name: 'Candidature prête' });
+    expect(within(applicationSummary).getByText('Message court')).toBeInTheDocument();
+    expect(within(applicationSummary).getByText('Lettre de motivation')).toBeInTheDocument();
+    expect(within(applicationSummary).getByText('Prête · 4 mots')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Voir les textes' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Message court' })).toBeInTheDocument();
     expect(screen.queryByText('Lettre de motivation préparée.')).not.toBeInTheDocument();
@@ -247,11 +247,12 @@ describe('ReviewQueueApplicationCard', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Voir les textes' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Modifier' }));
-    const editor = screen.getByRole('textbox', { name: 'Texte de la lettre' });
+    const dialog = screen.getByRole('dialog', { name: 'Motivation' });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Modifier' }));
+    const editor = within(dialog).getByRole('textbox', { name: 'Texte de la lettre' });
     expect(editor).toHaveValue('Lettre de motivation préparée.');
     fireEvent.change(editor, { target: { value: 'Lettre personnalisée.' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Enregistrer' }));
 
     await waitFor(() => expect(apiMock).toHaveBeenCalledWith('/applications/42/cover-letter', {
       method: 'PATCH',
