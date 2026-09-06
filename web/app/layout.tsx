@@ -9,6 +9,7 @@ import { SyncRunPanel } from '@/components/SyncRunPanel';
 import './globals.css';
 import './design-tokens.css';
 import './accessibility.css';
+import './offres/data-dense.css';
 
 export const metadata: Metadata = {
   title: 'JobPilot',
