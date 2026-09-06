@@ -1,0 +1,135 @@
+/* Data-dense treatment for the operational offers inbox only. */
+ul[aria-label="Offres filtrées"] {
+  overflow: hidden;
+  border: 1px solid var(--color-border, var(--line));
+  border-radius: var(--radius-lg, 12px);
+  background: var(--color-surface, var(--panel));
+}
+
+ul[aria-label="Offres filtrées"] > li {
+  min-height: var(--data-row-min-height, 52px);
+  align-items: center;
+  gap: var(--space-3, 12px);
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  border-bottom: 1px solid var(--color-border, var(--line));
+  background: var(--color-surface, var(--panel));
+}
+
+ul[aria-label="Offres filtrées"] > li:first-child {
+  padding-top: var(--space-3, 12px);
+}
+
+ul[aria-label="Offres filtrées"] > li:last-child {
+  padding-bottom: var(--space-3, 12px);
+  border-bottom: 0;
+}
+
+ul[aria-label="Offres filtrées"] > li > div:first-child {
+  display: grid;
+  gap: var(--space-1, 4px);
+}
+
+ul[aria-label="Offres filtrées"] h3 {
+  margin: 0;
+  color: var(--color-text, var(--text));
+  font-size: 0.9375rem;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+ul[aria-label="Offres filtrées"] .actions {
+  gap: var(--space-1, 4px) var(--space-2, 8px);
+  margin-bottom: 2px !important;
+}
+
+ul[aria-label="Offres filtrées"] .badge {
+  min-height: 22px;
+  padding-inline: 8px;
+  font-size: 0.6875rem;
+}
+
+ul[aria-label="Offres filtrées"] .muted.small {
+  line-height: 1.35;
+}
+
+ul[aria-label="Offres filtrées"] details {
+  margin-top: var(--space-1, 4px) !important;
+}
+
+ul[aria-label="Offres filtrées"] details > summary {
+  width: fit-content;
+  cursor: pointer;
+  color: var(--color-text-muted, var(--muted));
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+ul[aria-label="Offres filtrées"] details[open] {
+  margin-top: var(--space-2, 8px) !important;
+  padding-top: var(--space-2, 8px);
+  border-top: 1px dashed var(--color-border, var(--line));
+}
+
+ul[aria-label="Offres filtrées"] .notice {
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border-radius: var(--radius-sm, 8px);
+  background: var(--color-surface-data, #fbfcfe);
+}
+
+ul[aria-label="Offres filtrées"] .score {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 34px;
+  border-radius: var(--radius-md, 10px);
+  background: var(--color-primary-soft, var(--primary2));
+  color: var(--color-primary, var(--primary));
+  font-size: 0.8125rem;
+  font-weight: 850;
+}
+
+select[aria-label="Filtrer par source"] {
+  min-height: 38px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  ul[aria-label="Offres filtrées"] > li:hover {
+    background: var(--color-surface-data, #fbfcfe);
+  }
+}
+
+@media (max-width: 760px) {
+  ul[aria-label="Offres filtrées"] {
+    border-radius: var(--radius-md, 10px);
+  }
+
+  ul[aria-label="Offres filtrées"] > li {
+    position: relative;
+    align-items: flex-start;
+    padding: var(--space-3, 12px);
+  }
+
+  ul[aria-label="Offres filtrées"] > li > div:first-child {
+    padding-right: 48px;
+  }
+
+  ul[aria-label="Offres filtrées"] .score {
+    position: absolute;
+    top: var(--space-3, 12px);
+    right: var(--space-3, 12px);
+  }
+
+  ul[aria-label="Offres filtrées"] .actions {
+    gap: var(--space-1, 4px);
+  }
+
+  ul[aria-label="Offres filtrées"] .btn.small {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ul[aria-label="Offres filtrées"] > li {
+    transition: none;
+  }
+}
