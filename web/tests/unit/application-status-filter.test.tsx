@@ -60,7 +60,7 @@ describe('ApplicationStatusFilter', () => {
     expect(ready).toHaveAttribute('aria-checked', 'false');
     expect(ready).toHaveAttribute('tabindex', '-1');
     expect(submitted).toHaveAttribute('aria-checked', 'false');
-    expect(screen.getByText('4 candidature(s) affichée(s) sur 4.')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Vue activeAll4 candidatures · 4 au total');
 
     fireEvent.click(ready);
     expect(onChange).toHaveBeenCalledWith('READY_TO_SUBMIT');
@@ -107,7 +107,7 @@ describe('ApplicationStatusFilter', () => {
     expect(select).toHaveValue('SUBMITTED');
     expect(screen.getByRole('option', { name: 'Refusées (1)' })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'Entretiens (0)' })).toBeInTheDocument();
-    expect(screen.getByText('1 candidature(s) affichée(s) sur 4.')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Vue activeEnvoyées1 candidature · 4 au total');
 
     fireEvent.change(select, { target: { value: 'REJECTED' } });
     expect(onChange).toHaveBeenCalledWith('REJECTED');
@@ -124,6 +124,6 @@ describe('ApplicationStatusFilter', () => {
 
     expect(screen.getByLabelText('Filtrer les candidatures par statut')).toHaveValue('CUSTOM_REVIEW');
     expect(screen.getByRole('option', { name: 'Custom review (0)' })).toBeInTheDocument();
-    expect(screen.getByText('0 candidature(s) affichée(s) sur 4.')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Vue activeCustom review0 candidatures · 4 au total');
   });
 });
