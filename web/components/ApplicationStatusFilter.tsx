@@ -1,7 +1,7 @@
 'use client';
 
 import { FilterTabs } from '@/components/FilterTabs';
-import { FormField, InlineFeedback } from '@/components/UI';
+import { FormField } from '@/components/UI';
 import {
   applicationStatusLabel,
   applicationStatusOptions,
@@ -24,6 +24,10 @@ const QUICK_FILTERS: readonly ApplicationStatusFilterValue[] = [
   'SUBMITTED',
 ];
 
+function applicationCountLabel(count: number): string {
+  return `${count} candidature${count === 1 ? '' : 's'}`;
+}
+
 export function ApplicationStatusFilter({
   applications,
   value,
@@ -38,6 +42,7 @@ export function ApplicationStatusFilter({
       ];
   const optionByValue = new Map(options.map((option) => [option.value, option]));
   const visibleCount = filterApplications(applications, value).length;
+  const activeLabel = applicationStatusLabel(value);
   const quickOptions = QUICK_FILTERS.flatMap((filter) => {
     const option = optionByValue.get(filter);
 
@@ -57,25 +62,31 @@ export function ApplicationStatusFilter({
         />
       </div>
 
-      <div className={styles.statusField}>
-        <FormField label="Filtrer les candidatures par statut">
-          <select
-            id="application-status-filter"
-            value={value}
-            onChange={(event) => onChange(event.target.value)}
-          >
-            {options.map((option) => (
-              <option value={option.value} key={option.value}>
-                {option.label} ({option.count})
-              </option>
-            ))}
-          </select>
-        </FormField>
-      </div>
+      <div className={styles.detailRow}>
+        <div className={styles.statusField}>
+          <FormField label="Filtrer les candidatures par statut">
+            <select
+              id="application-status-filter"
+              value={value}
+              onChange={(event) => onChange(event.target.value)}
+            >
+              {options.map((option) => (
+                <option value={option.value} key={option.value}>
+                  {option.label} ({option.count})
+                </option>
+              ))}
+            </select>
+          </FormField>
+        </div>
 
-      <InlineFeedback className={styles.summary}>
-        {visibleCount} candidature(s) affichée(s) sur {applications.length}.
-      </InlineFeedback>
+        <div className={styles.summary} role="status" aria-live="polite" aria-atomic="true">
+          <span className={styles.summaryLabel}>Vue active</span>
+          <strong className={styles.summaryStatus}>{activeLabel}</strong>
+          <span className={styles.summaryCount}>
+            {applicationCountLabel(visibleCount)} · {applications.length} au total
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
