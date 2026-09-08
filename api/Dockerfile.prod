@@ -39,7 +39,13 @@ RUN mkdir -p var/cache var/log var/private/cvs \
     && chmod +x bin/console scheduler-entrypoint.sh
 
 ENV APP_ENV=prod \
-    APP_DEBUG=0
+    APP_DEBUG=0 \
+    APP_RUNTIME_OPTIONS='{"disable_dotenv":true}'
+
+# Production containers receive their configuration from Docker/Compose. This smoke
+# check deliberately runs without an /app/.env file so future image changes cannot
+# reintroduce a hard dependency on dotenv during console startup.
+RUN APP_SECRET=build-smoke-secret php bin/console --version >/dev/null
 
 EXPOSE 8080
 
