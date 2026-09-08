@@ -42,7 +42,7 @@ export function ApplicationStatusFilter({
       ];
   const optionByValue = new Map(options.map((option) => [option.value, option]));
   const visibleCount = filterApplications(applications, value).length;
-  const activeLabel = applicationStatusLabel(value);
+  const activeLabel = optionByValue.get(value)?.label ?? applicationStatusLabel(value);
   const quickOptions = QUICK_FILTERS.flatMap((filter) => {
     const option = optionByValue.get(filter);
 
