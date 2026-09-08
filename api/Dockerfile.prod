@@ -1,0 +1,46 @@
+FROM composer:2 AS vendor
+WORKDIR /app
+COPY api/composer.json ./
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --no-progress \
+    --prefer-dist \
+    --no-scripts \
+    --optimize-autoloader
+
+FROM dunglas/frankenphp:1-php8.4-alpine
+
+RUN install-php-extensions \
+    dom \
+    intl \
+    mbstring \
+    opcache \
+    pdo_pgsql \
+    xml \
+    xmlwriter \
+    zip
+
+WORKDIR /app
+
+COPY --from=vendor /app/vendor ./vendor
+COPY api/bin ./bin
+COPY api/config ./config
+COPY api/migrations ./migrations
+COPY api/public ./public
+COPY api/src ./src
+COPY api/composer.json ./composer.json
+COPY api/scheduler-entrypoint.sh ./scheduler-entrypoint.sh
+COPY api/scheduler-healthcheck.php ./scheduler-healthcheck.php
+COPY initial-data ./initial-data
+COPY api/frankenphp.Caddyfile /etc/frankenphp/Caddyfile
+
+RUN mkdir -p var/cache var/log var/private/cvs \
+    && chmod +x bin/console scheduler-entrypoint.sh
+
+ENV APP_ENV=prod \
+    APP_DEBUG=0
+
+EXPOSE 8080
+
+CMD ["frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile"]

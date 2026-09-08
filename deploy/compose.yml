@@ -1,0 +1,177 @@
+x-api-environment: &api-environment
+  APP_ENV: prod
+  APP_DEBUG: "0"
+  APP_SECRET: ${APP_SECRET:?set APP_SECRET}
+  APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:?set APP_ENCRYPTION_KEY}
+  DATABASE_URL: postgresql://${POSTGRES_USER:-jobpilot}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-jobpilot}?serverVersion=17&charset=utf8
+  WEB_URL: ${WEB_URL:?set WEB_URL}
+  DEFAULT_URI: ${DEFAULT_URI:?set DEFAULT_URI}
+  GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+  GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+  GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:?set GOOGLE_REDIRECT_URI}
+  GMAIL_SEARCH_QUERY: "${GMAIL_SEARCH_QUERY:-(job OR emploi OR offre OR mission OR candidature OR application OR recruiter OR entretien) newer_than:30d}"
+  GMAIL_MAX_RESULTS: ${GMAIL_MAX_RESULTS:-100}
+  GMAIL_MAX_PAGES: ${GMAIL_MAX_PAGES:-3}
+  ADZUNA_APP_ID: ${ADZUNA_APP_ID:-}
+  ADZUNA_APP_KEY: ${ADZUNA_APP_KEY:-}
+  ADZUNA_COUNTRY: ${ADZUNA_COUNTRY:-fr}
+  ADZUNA_WHERE: ${ADZUNA_WHERE:-}
+  ADZUNA_RESULTS_PER_QUERY: ${ADZUNA_RESULTS_PER_QUERY:-20}
+  FRANCE_TRAVAIL_CLIENT_ID: ${FRANCE_TRAVAIL_CLIENT_ID:-}
+  FRANCE_TRAVAIL_CLIENT_SECRET: ${FRANCE_TRAVAIL_CLIENT_SECRET:-}
+  FRANCE_TRAVAIL_SCOPE: "${FRANCE_TRAVAIL_SCOPE:-api_offresdemploiv2 o2dsoffre}"
+  FRANCE_TRAVAIL_TOKEN_ENDPOINT: ${FRANCE_TRAVAIL_TOKEN_ENDPOINT:-https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=/partenaire}
+  FRANCE_TRAVAIL_SEARCH_ENDPOINT: ${FRANCE_TRAVAIL_SEARCH_ENDPOINT:-https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search}
+  FRANCE_TRAVAIL_RESULTS_PER_QUERY: ${FRANCE_TRAVAIL_RESULTS_PER_QUERY:-50}
+  SMARTRECRUITERS_API_TOKEN: ${SMARTRECRUITERS_API_TOKEN:-}
+  SMARTRECRUITERS_COMPANY_IDENTIFIERS: ${SMARTRECRUITERS_COMPANY_IDENTIFIERS:-}
+  SMARTRECRUITERS_PAGES: ${SMARTRECRUITERS_PAGES:-1}
+  SMARTRECRUITERS_RESULTS_PER_PAGE: ${SMARTRECRUITERS_RESULTS_PER_PAGE:-100}
+  SMARTRECRUITERS_MAX_DETAILS: ${SMARTRECRUITERS_MAX_DETAILS:-20}
+  ARBEITNOW_ENABLED: ${ARBEITNOW_ENABLED:-1}
+  ARBEITNOW_PAGES: ${ARBEITNOW_PAGES:-3}
+  SYMFONY_JOBS_RSS_ENABLED: ${SYMFONY_JOBS_RSS_ENABLED:-1}
+  LE_STUDIO_TECH_ENABLED: ${LE_STUDIO_TECH_ENABLED:-1}
+  LE_STUDIO_TECH_PAGES: ${LE_STUDIO_TECH_PAGES:-8}
+  LE_STUDIO_TECH_MAX_DETAILS: ${LE_STUDIO_TECH_MAX_DETAILS:-20}
+  JOB_SYNC_INTERVAL_SECONDS: ${JOB_SYNC_INTERVAL_SECONDS:-21600}
+  CONNECTOR_ALERT_WEBHOOK_URL: ${CONNECTOR_ALERT_WEBHOOK_URL:-}
+  CONNECTOR_ALERT_WEBHOOK_ALLOWED_HOST: ${CONNECTOR_ALERT_WEBHOOK_ALLOWED_HOST:-}
+  CONNECTOR_ALERT_WEBHOOK_SECRET: ${CONNECTOR_ALERT_WEBHOOK_SECRET:-}
+  AI_MATCHING_ENABLED: ${AI_MATCHING_ENABLED:-0}
+  GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+  GEMINI_MATCHING_MODEL: ${GEMINI_MATCHING_MODEL:-gemini-3.5-flash-lite}
+  GEMINI_QUOTA_RPM: ${GEMINI_QUOTA_RPM:-15}
+  GEMINI_QUOTA_TPM: ${GEMINI_QUOTA_TPM:-250000}
+  GEMINI_QUOTA_RPD: ${GEMINI_QUOTA_RPD:-500}
+  AI_QUOTA_SAFETY_PERCENT: ${AI_QUOTA_SAFETY_PERCENT:-80}
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  OPENAI_MATCHING_MODEL: ${OPENAI_MATCHING_MODEL:-}
+  MISTRAL_API_KEY: ${MISTRAL_API_KEY:-}
+  MISTRAL_MATCHING_MODEL: ${MISTRAL_MATCHING_MODEL:-}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  ANTHROPIC_MATCHING_MODEL: ${ANTHROPIC_MATCHING_MODEL:-}
+  BROWSER_WORKER_URL: http://browser-worker:3100
+  JOBPILOT_BROWSER_WORKER_TOKEN: ${JOBPILOT_BROWSER_WORKER_TOKEN:?set JOBPILOT_BROWSER_WORKER_TOKEN}
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-jobpilot}
+      POSTGRES_USER: ${POSTGRES_USER:-jobpilot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jobpilot} -d ${POSTGRES_DB:-jobpilot}"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  browser-worker:
+    image: ghcr.io/eissasoubhi/jobpilot-prod-browser-worker:${JOBPILOT_VERSION:?set JOBPILOT_VERSION}
+    init: true
+    restart: unless-stopped
+    environment:
+      BROWSER_WORKER_HOST: 0.0.0.0
+      BROWSER_WORKER_PORT: 3100
+      JOBPILOT_BROWSER_WORKER_TOKEN: ${JOBPILOT_BROWSER_WORKER_TOKEN:?set JOBPILOT_BROWSER_WORKER_TOKEN}
+    expose:
+      - "3100"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3100/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
+    read_only: true
+    tmpfs:
+      - /tmp:size=536870912,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    shm_size: 512mb
+
+  api:
+    image: ghcr.io/eissasoubhi/jobpilot-prod-api:${JOBPILOT_VERSION:?set JOBPILOT_VERSION}
+    restart: unless-stopped
+    environment: *api-environment
+    depends_on:
+      db:
+        condition: service_healthy
+      browser-worker:
+        condition: service_healthy
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1:8080/api/health') === false ? 1 : 0);"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 15s
+    volumes:
+      - jobpilot_private:/app/var/private
+
+  scheduler:
+    image: ghcr.io/eissasoubhi/jobpilot-prod-api:${JOBPILOT_VERSION:?set JOBPILOT_VERSION}
+    entrypoint: ["sh", "./scheduler-entrypoint.sh"]
+    restart: unless-stopped
+    environment:
+      <<: *api-environment
+      SCHEDULER_HEARTBEAT_PATH: /tmp/jobpilot-scheduler-heartbeat
+      SCHEDULER_HEARTBEAT_GRACE_SECONDS: ${SCHEDULER_HEARTBEAT_GRACE_SECONDS:-300}
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "php", "./scheduler-healthcheck.php"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+    volumes:
+      - jobpilot_private:/app/var/private
+
+  web:
+    image: ghcr.io/eissasoubhi/jobpilot-prod-web:${JOBPILOT_VERSION:?set JOBPILOT_VERSION}
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: /api
+      API_INTERNAL_URL: http://api:8080
+    depends_on:
+      api:
+        condition: service_healthy
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 15s
+
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    environment:
+      CADDY_SITE_ADDRESS: ${CADDY_SITE_ADDRESS:?set CADDY_SITE_ADDRESS}
+    depends_on:
+      web:
+        condition: service_healthy
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  postgres_data:
+  jobpilot_private:
+  caddy_data:
+  caddy_config:
