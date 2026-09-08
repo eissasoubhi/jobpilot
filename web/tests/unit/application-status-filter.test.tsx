@@ -60,7 +60,7 @@ describe('ApplicationStatusFilter', () => {
     expect(ready).toHaveAttribute('aria-checked', 'false');
     expect(ready).toHaveAttribute('tabindex', '-1');
     expect(submitted).toHaveAttribute('aria-checked', 'false');
-    expect(screen.getByRole('status')).toHaveTextContent('Vue activeAll4 candidatures · 4 au total');
+    expect(screen.getByRole('status')).toHaveTextContent('Vue activeToutes les candidatures4 candidatures · 4 au total');
 
     fireEvent.click(ready);
     expect(onChange).toHaveBeenCalledWith('READY_TO_SUBMIT');
