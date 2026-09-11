@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useId, useRef, useState } from 'react';
 
 import { Modal } from './Modal';
-import { Button } from './UI';
+import { Button, FormField } from './UI';
 
 const meta = {
   title: 'Feedback/Modal',
@@ -45,10 +45,9 @@ function LabelledModalExample({ closeOnBackdrop = true }: { closeOnBackdrop?: bo
                 Vérifiez les informations avant de poursuivre. Rien n’est envoyé automatiquement.
               </p>
             </div>
-            <label>
-              Note de préparation
+            <FormField label="Note de préparation">
               <input ref={initialFocusRef} placeholder="Ajouter une note" />
-            </label>
+            </FormField>
             <div className="actions">
               <Button variant="secondary" onClick={() => setOpen(false)}>Annuler</Button>
               <Button>Continuer</Button>
