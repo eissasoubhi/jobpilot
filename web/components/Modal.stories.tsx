@@ -25,7 +25,7 @@ function LabelledModalExample({ closeOnBackdrop = true }: { closeOnBackdrop?: bo
   const [open, setOpen] = useState(true);
   const titleId = useId();
   const descriptionId = useId();
-  const primaryActionRef = useRef<HTMLButtonElement>(null);
+  const initialFocusRef = useRef<HTMLInputElement>(null);
 
   return (
     <div style={{ padding: 24 }}>
@@ -35,7 +35,7 @@ function LabelledModalExample({ closeOnBackdrop = true }: { closeOnBackdrop?: bo
           ariaLabelledBy={titleId}
           ariaDescribedBy={descriptionId}
           closeOnBackdrop={closeOnBackdrop}
-          initialFocusRef={primaryActionRef}
+          initialFocusRef={initialFocusRef}
           onClose={() => setOpen(false)}
         >
           <div className="stack">
@@ -45,9 +45,13 @@ function LabelledModalExample({ closeOnBackdrop = true }: { closeOnBackdrop?: bo
                 Vérifiez les informations avant de poursuivre. Rien n’est envoyé automatiquement.
               </p>
             </div>
+            <label>
+              Note de préparation
+              <input ref={initialFocusRef} placeholder="Ajouter une note" />
+            </label>
             <div className="actions">
               <Button variant="secondary" onClick={() => setOpen(false)}>Annuler</Button>
-              <Button ref={primaryActionRef}>Continuer</Button>
+              <Button>Continuer</Button>
             </div>
           </div>
         </Modal>
