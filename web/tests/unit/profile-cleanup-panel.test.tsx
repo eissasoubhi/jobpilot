@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ProfileCleanupPanel } from '@/components/ProfileCleanupPanel';
@@ -13,12 +13,18 @@ describe('ProfileCleanupPanel', () => {
     vi.restoreAllMocks();
   });
 
-  it('does nothing when the confirmation dialog is cancelled', () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
-
+  it('opens an accessible confirmation and cancels without calling the cleanup API', () => {
     render(<ProfileCleanupPanel />);
     fireEvent.click(screen.getByRole('button', { name: 'Nettoyer les offres hors profil' }));
 
+    const dialog = screen.getByRole('dialog', {
+      name: 'Supprimer les offres hors profil identifiées ?',
+    });
+    expect(dialog).toHaveTextContent('Aucun nouvel appel Gemini n’est effectué');
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Annuler' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(apiMock).not.toHaveBeenCalled();
   });
 
@@ -30,7 +36,6 @@ describe('ProfileCleanupPanel', () => {
   });
 
   it('cleans only confirmed stored mismatches and shows the summary', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     apiMock.mockResolvedValueOnce({
       message: '29 offre(s) hors profil supprimée(s). 120 offre(s) conservée(s).',
       cleanup: {
@@ -50,7 +55,13 @@ describe('ProfileCleanupPanel', () => {
     render(<ProfileCleanupPanel />);
     fireEvent.click(screen.getByRole('button', { name: 'Nettoyer les offres hors profil' }));
 
-    expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining('Aucun nouvel appel Gemini'));
+    const dialog = screen.getByRole('dialog', {
+      name: 'Supprimer les offres hors profil identifiées ?',
+    });
+    expect(apiMock).not.toHaveBeenCalled();
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Nettoyer les offres hors profil' }));
+
     await waitFor(() => expect(apiMock).toHaveBeenCalledWith('/job-search/cleanup-profile-mismatches', {
       method: 'POST',
       body: JSON.stringify({ confirmation: 'CLEAN_PROFILE_MISMATCHES' }),
