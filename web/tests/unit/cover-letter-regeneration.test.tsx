@@ -203,8 +203,9 @@ describe('Motivation drawer', () => {
     expect(screen.queryByText(/dépasse la limite choisie/)).not.toBeInTheDocument();
   });
 
-  it('asks for confirmation before overwriting a manually edited letter', () => {
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+  it('requires accessible confirmation before replacing a manually edited letter', async () => {
+    const updated = { ...application(), coverLetter: 'Nouvelle version générée.' } as Application;
+    apiMock.mockResolvedValueOnce(updated);
 
     render(
       <CoverLetterDrawer
@@ -216,7 +217,50 @@ describe('Motivation drawer', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Régénérer' }));
 
-    expect(confirm).toHaveBeenCalledWith(expect.stringContaining('remplacera la version modifiée manuellement'));
+    const dialog = screen.getByRole('dialog', { name: 'Remplacer la version modifiée ?' });
+    expect(dialog).toHaveTextContent('remplacera vos modifications manuelles');
     expect(apiMock).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Annuler' }));
+    expect(screen.queryByRole('dialog', { name: 'Remplacer la version modifiée ?' })).not.toBeInTheDocument();
+    expect(apiMock).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Régénérer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Régénérer la lettre' }));
+
+    await waitFor(() => expect(apiMock).toHaveBeenCalledWith('/applications/61/cover-letter/regenerate', {
+      method: 'POST',
+      body: JSON.stringify({ maxCharacters: 1500 }),
+    }));
+  });
+
+  it('requires confirmation before resetting manual edits to the generated version', async () => {
+    const updated = {
+      ...application(),
+      coverLetter: 'Dernière version générée.',
+      coverLetterManuallyEdited: false,
+      coverLetterEditedAt: null,
+    } as Application;
+    apiMock.mockResolvedValueOnce(updated);
+
+    render(
+      <CoverLetterDrawer
+        application={application(true)}
+        open
+        onClose={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Réinitialiser' }));
+
+    const dialog = screen.getByRole('dialog', { name: 'Revenir à la dernière version générée ?' });
+    expect(dialog).toHaveTextContent('modifications manuelles ne seront plus affichées');
+    expect(apiMock).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Réinitialiser la lettre' }));
+
+    await waitFor(() => expect(apiMock).toHaveBeenCalledWith('/applications/61/cover-letter/reset', {
+      method: 'POST',
+    }));
   });
 });
