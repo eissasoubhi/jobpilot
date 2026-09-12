@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CoverLetterDrawer } from '@/components/CoverLetterDrawer';
@@ -221,12 +221,13 @@ describe('Motivation drawer', () => {
     expect(dialog).toHaveTextContent('remplacera vos modifications manuelles');
     expect(apiMock).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Annuler' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Annuler' }));
     expect(screen.queryByRole('dialog', { name: 'Remplacer la version modifiée ?' })).not.toBeInTheDocument();
     expect(apiMock).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole('button', { name: 'Régénérer' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Régénérer la lettre' }));
+    const confirmation = screen.getByRole('dialog', { name: 'Remplacer la version modifiée ?' });
+    fireEvent.click(within(confirmation).getByRole('button', { name: 'Régénérer la lettre' }));
 
     await waitFor(() => expect(apiMock).toHaveBeenCalledWith('/applications/61/cover-letter/regenerate', {
       method: 'POST',
@@ -257,7 +258,7 @@ describe('Motivation drawer', () => {
     expect(dialog).toHaveTextContent('modifications manuelles ne seront plus affichées');
     expect(apiMock).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Réinitialiser la lettre' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Réinitialiser la lettre' }));
 
     await waitFor(() => expect(apiMock).toHaveBeenCalledWith('/applications/61/cover-letter/reset', {
       method: 'POST',
