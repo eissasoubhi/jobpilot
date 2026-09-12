@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Button } from '@/components/UI';
 import { api } from '@/lib/api';
 import { getErrorMessage } from '@/lib/errors';
@@ -32,6 +33,7 @@ const API_CONFIRMATION = 'RESET_OFFERS';
 
 export function CatalogResetPanel() {
   const [confirmation, setConfirmation] = useState('');
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState<CatalogResetResult | null>(null);
@@ -41,11 +43,7 @@ export function CatalogResetPanel() {
   const resetCatalog = async (): Promise<void> => {
     if (!canReset) return;
 
-    const confirmed = window.confirm(
-      'Cette action supprime toutes les offres et les candidatures qui leur sont liées, y compris l’historique des statuts. Les CV, le profil, les paramètres et les connecteurs sont conservés. Continuer ?',
-    );
-    if (!confirmed) return;
-
+    setConfirmationOpen(false);
     setResetting(true);
     setError('');
     setResult(null);
@@ -115,12 +113,22 @@ export function CatalogResetPanel() {
           variant="danger"
           disabled={!canReset}
           loading={resetting}
-          onClick={() => void resetCatalog()}
+          onClick={() => setConfirmationOpen(true)}
         >
           {resetting ? 'Suppression et resynchronisation…' : 'Supprimer et resynchroniser'}
         </Button>
         <span>Les critères de recherche actuellement enregistrés seront utilisés.</span>
       </div>
+
+      <ConfirmDialog
+        open={confirmationOpen}
+        title="Supprimer le catalogue et les candidatures liées ?"
+        description="Toutes les offres, leurs occurrences et les candidatures associées seront supprimées, y compris leur historique de statuts. Le profil, les CV, les paramètres et les connecteurs seront conservés."
+        confirmLabel="Supprimer et resynchroniser"
+        confirmVariant="danger"
+        onConfirm={() => void resetCatalog()}
+        onCancel={() => setConfirmationOpen(false)}
+      />
 
       {error !== '' && <div className={styles.error} role="alert">{error}</div>}
 
