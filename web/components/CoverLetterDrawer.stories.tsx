@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { userEvent, within } from 'storybook/test';
 
 import { CoverLetterDrawer } from './CoverLetterDrawer';
 import type { Application } from '@/lib/types';
@@ -30,6 +31,13 @@ const baseApplication = {
   },
 } as Application & { coverLetterManuallyEdited?: boolean; coverLetterEditedAt?: string | null };
 
+const manuallyEditedApplication = {
+  ...baseApplication,
+  coverLetterManuallyEdited: true,
+  coverLetterEditedAt: '2026-09-12T08:45:00+02:00',
+  coverLetter: `${baseApplication.coverLetter}\n\nDisponibilité : immédiate.`,
+} as Application;
+
 const meta = {
   title: 'Applications/CoverLetterDrawer',
   component: CoverLetterDrawer,
@@ -51,12 +59,18 @@ export const GeneratedCoverLetter: Story = {};
 
 export const ManuallyEditedCoverLetter: Story = {
   args: {
-    application: {
-      ...baseApplication,
-      coverLetterManuallyEdited: true,
-      coverLetterEditedAt: '2026-09-12T08:45:00+02:00',
-      coverLetter: `${baseApplication.coverLetter}\n\nDisponibilité : immédiate.`,
-    } as Application,
+    application: manuallyEditedApplication,
+  },
+};
+
+export const RegenerationConfirmation: Story = {
+  args: {
+    application: manuallyEditedApplication,
+  },
+  play: async () => {
+    const body = within(document.body);
+    await userEvent.click(body.getByRole('button', { name: 'Régénérer' }));
+    await body.findByRole('dialog', { name: 'Remplacer la version modifiée ?' });
   },
 };
 
