@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Badge, Card, ErrorBox, Loading, PageHeader } from '@/components/UI';
 import { api } from '@/lib/api';
 import { getErrorMessage } from '@/lib/errors';
@@ -191,6 +192,8 @@ export default function CustomScrapingSettingsPage() {
   const [sourceFeedback, setSourceFeedback] = useState<Record<number, SourceFeedback>>({});
   const [testingId, setTestingId] = useState<number | null>(null);
   const [previewingId, setPreviewingId] = useState<number | null>(null);
+  const [deletingSource, setDeletingSource] = useState<CustomScraperSource | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
@@ -331,8 +334,7 @@ export default function CustomScrapingSettingsPage() {
   };
 
   const deleteSource = async (source: CustomScraperSource): Promise<void> => {
-    if (!window.confirm(`Supprimer ${source.name} du registre de scraping ?`)) return;
-
+    setDeleting(true);
     setError('');
     setMessage('');
     try {
@@ -349,9 +351,13 @@ export default function CustomScrapingSettingsPage() {
         return next;
       });
       clearSourceFeedback(source.id);
+      setDeletingSource(null);
       setMessage(`${source.name} a été supprimé.`);
     } catch (caughtError: unknown) {
       setError(getErrorMessage(caughtError));
+      setDeletingSource(null);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -486,7 +492,7 @@ export default function CustomScrapingSettingsPage() {
                       <option value="HTTP">HTTP</option>
                       <option value="BROWSER">Browser</option>
                     </select>
-                    <button className="btn secondary" type="button" onClick={() => void deleteSource(source)}>Supprimer</button>
+                    <button className="btn secondary" type="button" onClick={() => setDeletingSource(source)}>Supprimer</button>
                   </div>
 
                   {feedback && (
@@ -581,6 +587,20 @@ export default function CustomScrapingSettingsPage() {
           </div>
         )}
       </Card>
+
+      <ConfirmDialog
+        open={deletingSource !== null}
+        title={deletingSource ? `Supprimer ${deletingSource.name} ?` : 'Supprimer cette source ?'}
+        description="Cette source sera retirée du registre de scraping JobPilot et ne sera plus disponible pour les prochaines synchronisations."
+        confirmLabel="Supprimer la source"
+        loading={deleting}
+        onCancel={() => {
+          if (!deleting) setDeletingSource(null);
+        }}
+        onConfirm={() => {
+          if (deletingSource !== null) void deleteSource(deletingSource);
+        }}
+      />
     </>
   );
 }
