@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useId, useRef, useState } from 'react';
 
+import { ConfirmDialog } from './ConfirmDialog';
 import { Modal } from './Modal';
 import { Button, FormField } from './UI';
 
@@ -59,6 +60,45 @@ function LabelledModalExample({ closeOnBackdrop = true }: { closeOnBackdrop?: bo
   );
 }
 
+function NestedConfirmationExample() {
+  const [editorOpen, setEditorOpen] = useState(true);
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
+
+  return (
+    <div style={{ padding: 24 }}>
+      {!editorOpen && <Button onClick={() => setEditorOpen(true)}>Rouvrir l’éditeur</Button>}
+      {editorOpen && (
+        <Modal ariaLabel="Modifier la fiche CRM ACME Consulting" onClose={() => setEditorOpen(false)}>
+          <div className="stack">
+            <div>
+              <h2 className="section-title">Modifier la fiche CRM</h2>
+              <p className="muted">Les corrections restent locales et n’altèrent pas les données sources.</p>
+            </div>
+            <FormField label="Note interne">
+              <textarea defaultValue="Relancer dans une semaine." />
+            </FormField>
+            <div className="actions">
+              <Button variant="secondary" onClick={() => setConfirmationOpen(true)}>
+                Effacer les corrections
+              </Button>
+              <Button>Enregistrer</Button>
+            </div>
+          </div>
+
+          <ConfirmDialog
+            open={confirmationOpen}
+            title="Effacer les corrections CRM ?"
+            description="Le nom affiché et la note interne seront supprimés. Les données sources resteront inchangées."
+            confirmLabel="Effacer les corrections"
+            onConfirm={() => setConfirmationOpen(false)}
+            onCancel={() => setConfirmationOpen(false)}
+          />
+        </Modal>
+      )}
+    </div>
+  );
+}
+
 export const LabelledAndDescribed: Story = {
   render: () => <LabelledModalExample />,
 };
@@ -87,4 +127,8 @@ export const DirectAccessibleLabel: Story = {
       </div>
     );
   },
+};
+
+export const NestedConfirmation: Story = {
+  render: () => <NestedConfirmationExample />,
 };

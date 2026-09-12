@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { CrmOrganizationAnnotationEditor } from '@/components/CrmOrganizationAnnotationEditor';
@@ -72,8 +72,7 @@ describe('CrmOrganizationAnnotationEditor', () => {
     });
   });
 
-  it('clears both fields only after explicit confirmation', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+  it('clears both fields only after explicit accessible confirmation', async () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
     render(
       <CrmOrganizationAnnotationEditor
@@ -85,11 +84,37 @@ describe('CrmOrganizationAnnotationEditor', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Effacer les corrections' }));
 
+    const confirmation = screen.getByRole('dialog', { name: 'Effacer les corrections CRM ?' });
+    expect(confirmation).toHaveTextContent('Le nom détecté, la clé stable');
+    expect(onSave).not.toHaveBeenCalled();
+
+    fireEvent.click(within(confirmation).getByRole('button', { name: 'Effacer les corrections' }));
+
     await waitFor(() => {
       expect(onSave).toHaveBeenCalledWith({ displayName: '', note: '' });
     });
     expect(screen.getByLabelText('Nom affiché dans le CRM')).toHaveValue('');
     expect(screen.getByLabelText('Note interne')).toHaveValue('');
+  });
+
+  it('closes only the nested confirmation with Escape', () => {
+    const onClose = vi.fn();
+    render(
+      <CrmOrganizationAnnotationEditor
+        organization={organization}
+        onSave={vi.fn()}
+        onClose={onClose}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Effacer les corrections' }));
+    const confirmation = screen.getByRole('dialog', { name: 'Effacer les corrections CRM ?' });
+
+    fireEvent.keyDown(confirmation, { key: 'Escape' });
+
+    expect(screen.queryByRole('dialog', { name: 'Effacer les corrections CRM ?' })).not.toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Modifier la fiche CRM ACME Consulting France' })).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it('keeps the editor open and exposes a failed save', async () => {

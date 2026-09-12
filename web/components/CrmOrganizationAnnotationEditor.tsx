@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from 'react';
 
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Modal } from '@/components/Modal';
 import { Button, ErrorBox, FormField, PageHeader } from '@/components/UI';
 import { getErrorMessage } from '@/lib/errors';
@@ -25,6 +26,7 @@ export function CrmOrganizationAnnotationEditor({
 }: CrmOrganizationAnnotationEditorProps) {
   const [displayName, setDisplayName] = useState(organization.annotation?.displayName ?? '');
   const [note, setNote] = useState(organization.annotation?.note ?? '');
+  const [clearConfirmationOpen, setClearConfirmationOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -47,11 +49,7 @@ export function CrmOrganizationAnnotationEditor({
   };
 
   const clear = async (): Promise<void> => {
-    const confirmed = window.confirm(
-      'Effacer le nom affiché et la note CRM ? Les données sources resteront intactes.',
-    );
-    if (!confirmed) return;
-
+    setClearConfirmationOpen(false);
     setDisplayName('');
     setNote('');
     await submit({ displayName: '', note: '' });
@@ -117,7 +115,7 @@ export function CrmOrganizationAnnotationEditor({
           <Button
             variant="secondary"
             disabled={saving || !hasAnnotation}
-            onClick={() => void clear()}
+            onClick={() => setClearConfirmationOpen(true)}
           >
             Effacer les corrections
           </Button>
@@ -126,6 +124,17 @@ export function CrmOrganizationAnnotationEditor({
           </Button>
         </div>
       </form>
+
+      <ConfirmDialog
+        open={clearConfirmationOpen}
+        title="Effacer les corrections CRM ?"
+        description="Le nom affiché et la note interne seront supprimés. Le nom détecté, la clé stable, les offres, positionnements et messages d’origine resteront inchangés."
+        confirmLabel="Effacer les corrections"
+        confirmVariant="danger"
+        loading={saving}
+        onConfirm={() => void clear()}
+        onCancel={() => setClearConfirmationOpen(false)}
+      />
     </Modal>
   );
 }

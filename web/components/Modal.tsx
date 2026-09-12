@@ -72,11 +72,16 @@ export function Modal({
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     if (event.key === 'Escape') {
       event.preventDefault();
+      event.stopPropagation();
       onClose();
       return;
     }
 
     if (event.key !== 'Tab') return;
+
+    // Nested dialogs own their keyboard loop. Do not let Tab bubble into a parent
+    // modal and make two focus traps compete for the same key press.
+    event.stopPropagation();
 
     const panel = panelRef.current;
     if (!panel) return;
