@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import styles from '@/components/CoverLetterDrawer.module.css';
 import { Modal } from '@/components/Modal';
 import { API_URL, api } from '@/lib/api';
@@ -19,6 +20,8 @@ type EditableApplication = Application & {
 type MotivationTab = 'coverLetter' | 'message';
 
 type CoverLetterFormat = 'pdf' | 'docx';
+
+type ConfirmationAction = 'regenerate' | 'reset' | null;
 
 type CoverLetterDrawerProps = {
   application: Application;
@@ -52,6 +55,7 @@ export function CoverLetterDrawer({
   const [saving, setSaving] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [regeneratingMessage, setRegeneratingMessage] = useState(false);
+  const [confirmationAction, setConfirmationAction] = useState<ConfirmationAction>(null);
   const [maxCharacters, setMaxCharacters] = useState(1_500);
   const [messageMaxCharacters, setMessageMaxCharacters] = useState(400);
   const [targetCompany, setTargetCompany] = useState(jobTargetCompany(application.jobOffer));
@@ -82,6 +86,7 @@ export function CoverLetterDrawer({
       setActiveTab(initialTab);
       setDraft(application.coverLetter);
       setEditing(false);
+      setConfirmationAction(null);
       setMaxCharacters(1_500);
       setMessageMaxCharacters(400);
       setTargetCompany(jobTargetCompany(application.jobOffer));
@@ -129,17 +134,7 @@ export function CoverLetterDrawer({
     }
   };
 
-  const regenerate = async (): Promise<void> => {
-    if (saving || regenerating || regeneratingMessage) return;
-    if (maxCharacters < 200 || maxCharacters > 20_000) {
-      setError('La longueur maximale doit être comprise entre 200 et 20 000 caractères.');
-      return;
-    }
-    if (editableApplication.coverLetterManuallyEdited
-      && !window.confirm('Régénérer la lettre remplacera la version modifiée manuellement. Continuer ?')) {
-      return;
-    }
-
+  const performRegenerate = async (): Promise<void> => {
     setRegenerating(true);
     setNotice('');
     setError('');
@@ -158,6 +153,20 @@ export function CoverLetterDrawer({
     } finally {
       setRegenerating(false);
     }
+  };
+
+  const regenerate = async (): Promise<void> => {
+    if (saving || regenerating || regeneratingMessage) return;
+    if (maxCharacters < 200 || maxCharacters > 20_000) {
+      setError('La longueur maximale doit être comprise entre 200 et 20 000 caractères.');
+      return;
+    }
+    if (editableApplication.coverLetterManuallyEdited) {
+      setConfirmationAction('regenerate');
+      return;
+    }
+
+    await performRegenerate();
   };
 
   const regenerateMessage = async (): Promise<void> => {
@@ -185,10 +194,7 @@ export function CoverLetterDrawer({
     }
   };
 
-  const reset = async (): Promise<void> => {
-    if (saving || regenerating || regeneratingMessage) return;
-    if (!window.confirm('Réinitialiser la lettre avec la dernière version générée par JobPilot ?')) return;
-
+  const performReset = async (): Promise<void> => {
     setSaving(true);
     setNotice('');
     setError('');
@@ -205,6 +211,22 @@ export function CoverLetterDrawer({
       setError(getErrorMessage(caughtError));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const reset = (): void => {
+    if (saving || regenerating || regeneratingMessage) return;
+    setConfirmationAction('reset');
+  };
+
+  const confirmPendingAction = (): void => {
+    const action = confirmationAction;
+    setConfirmationAction(null);
+
+    if (action === 'regenerate') {
+      void performRegenerate();
+    } else if (action === 'reset') {
+      void performReset();
     }
   };
 
@@ -287,6 +309,16 @@ export function CoverLetterDrawer({
     setNotice('');
     setError('');
   };
+
+  const confirmationTitle = confirmationAction === 'regenerate'
+    ? 'Remplacer la version modifiée ?'
+    : 'Revenir à la dernière version générée ?';
+  const confirmationDescription = confirmationAction === 'regenerate'
+    ? 'Régénérer la lettre remplacera vos modifications manuelles par une nouvelle version générée.'
+    : 'La lettre actuelle sera remplacée par la dernière version générée par JobPilot. Vos modifications manuelles ne seront plus affichées.';
+  const confirmationLabel = confirmationAction === 'regenerate'
+    ? 'Régénérer la lettre'
+    : 'Réinitialiser la lettre';
 
   return (
     <Modal
@@ -401,7 +433,7 @@ export function CoverLetterDrawer({
                   className="btn secondary small"
                   type="button"
                   disabled={saving || regenerating || regeneratingMessage}
-                  onClick={() => void reset()}
+                  onClick={reset}
                 >
                   Réinitialiser
                 </button>
@@ -517,7 +549,7 @@ export function CoverLetterDrawer({
                         className="btn secondary small"
                         type="button"
                         disabled={saving || regenerating || regeneratingMessage}
-                        onClick={() => void reset()}
+                        onClick={reset}
                       >
                         Réinitialiser
                       </button>
@@ -556,6 +588,17 @@ export function CoverLetterDrawer({
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirmationAction !== null}
+        title={confirmationTitle}
+        description={confirmationDescription}
+        confirmLabel={confirmationLabel}
+        confirmVariant="danger"
+        loading={saving || regenerating}
+        onCancel={() => setConfirmationAction(null)}
+        onConfirm={confirmPendingAction}
+      />
     </Modal>
   );
 }
