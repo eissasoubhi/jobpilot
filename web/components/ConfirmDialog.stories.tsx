@@ -25,6 +25,14 @@ type Story = StoryObj<typeof meta>;
 
 export const Danger: Story = {};
 
+export const SourceRemoval: Story = {
+  args: {
+    title: 'Supprimer Example Jobs ?',
+    description: 'Cette source sera retirée du registre de scraping JobPilot et ne sera plus disponible pour les prochaines synchronisations.',
+    confirmLabel: 'Supprimer la source',
+  },
+};
+
 export const PrimaryConfirmation: Story = {
   args: {
     title: 'Relancer cette candidature ?',
