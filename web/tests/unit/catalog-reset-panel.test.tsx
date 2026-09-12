@@ -26,8 +26,7 @@ describe('CatalogResetPanel', () => {
     expect(button).toBeEnabled();
   });
 
-  it('requires a final confirmation then resets and shows the fresh sync summary', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+  it('shows an accessible final confirmation before resetting the catalog', async () => {
     apiMock.mockResolvedValueOnce({
       message: 'Catalogue supprimé puis resynchronisé depuis les sources actives.',
       reset: {
@@ -54,7 +53,14 @@ describe('CatalogResetPanel', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'Supprimer et resynchroniser' }));
 
-    expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining('candidatures qui leur sont liées'));
+    const dialog = screen.getByRole('dialog', {
+      name: 'Supprimer le catalogue et les candidatures liées ?',
+    });
+    expect(dialog).toHaveTextContent('historique de statuts');
+    expect(apiMock).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Supprimer et resynchroniser' }));
+
     await waitFor(() => expect(apiMock).toHaveBeenCalledWith('/job-search/reset', {
       method: 'POST',
       body: JSON.stringify({ confirmation: 'RESET_OFFERS' }),
@@ -65,5 +71,18 @@ describe('CatalogResetPanel', () => {
     expect(screen.getByRole('status')).toHaveTextContent('82 nouvelles offres');
     expect(screen.getByRole('status')).toHaveTextContent('44 hors profil filtrées');
     expect(screen.getByRole('link', { name: 'Voir le nouveau catalogue →' })).toHaveAttribute('href', '/offres');
+  });
+
+  it('cancels the final confirmation without calling the reset API', () => {
+    render(<CatalogResetPanel />);
+    fireEvent.change(
+      screen.getByRole('textbox', { name: 'Confirmation de réinitialisation des offres' }),
+      { target: { value: 'REINITIALISER' } },
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Supprimer et resynchroniser' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Annuler' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(apiMock).not.toHaveBeenCalled();
   });
 });
