@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { api } from '@/lib/api';
 import { getErrorMessage } from '@/lib/errors';
 
@@ -26,16 +27,13 @@ type ProfileCleanupResult = {
 const API_CONFIRMATION = 'CLEAN_PROFILE_MISMATCHES';
 
 export function ProfileCleanupPanel() {
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
   const [cleaning, setCleaning] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState<ProfileCleanupResult | null>(null);
 
   const cleanup = async (): Promise<void> => {
-    const confirmed = window.confirm(
-      'Supprimer uniquement les offres déjà identifiées comme clairement hors profil ? Les candidatures déjà envoyées, en entretien, refusées ou avec un historique traité seront conservées. Aucun nouvel appel Gemini ne sera effectué.',
-    );
-    if (!confirmed) return;
-
+    setConfirmationOpen(false);
     setCleaning(true);
     setError('');
     setResult(null);
@@ -87,12 +85,23 @@ export function ProfileCleanupPanel() {
           className={styles.resetButton}
           type="button"
           disabled={cleaning}
-          onClick={() => void cleanup()}
+          onClick={() => setConfirmationOpen(true)}
         >
           {cleaning ? 'Nettoyage…' : 'Nettoyer les offres hors profil'}
         </button>
         <span>Nettoyage local uniquement : pas de consommation RPM/TPM/RPD supplémentaire.</span>
       </div>
+
+      <ConfirmDialog
+        open={confirmationOpen}
+        title="Supprimer les offres hors profil identifiées ?"
+        description="Seules les offres déjà identifiées comme clairement hors profil seront supprimées. Les candidatures envoyées, en entretien, refusées ou déjà suivies sont conservées. Aucun nouvel appel Gemini n’est effectué."
+        confirmLabel="Nettoyer les offres hors profil"
+        confirmVariant="danger"
+        loading={cleaning}
+        onConfirm={() => void cleanup()}
+        onCancel={() => setConfirmationOpen(false)}
+      />
 
       {error !== '' && <div className={styles.error} role="alert">{error}</div>}
 
