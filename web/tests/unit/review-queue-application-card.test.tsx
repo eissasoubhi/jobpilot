@@ -292,7 +292,6 @@ describe('ReviewQueueApplicationCard', () => {
   });
 
   it('resets a manual cover letter to the latest generated version from the drawer', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     const manual = withCoverLetterState(
       application({ coverLetter: 'Texte manuel.' }),
       true,
@@ -308,6 +307,10 @@ describe('ReviewQueueApplicationCard', () => {
     render(<ReviewQueueApplicationCard application={manual} />);
     fireEvent.click(screen.getByRole('button', { name: 'Voir les textes' }));
     fireEvent.click(screen.getByRole('button', { name: 'Réinitialiser' }));
+
+    expect(apiMock).not.toHaveBeenCalled();
+    const confirmation = screen.getByRole('dialog', { name: 'Revenir à la dernière version générée ?' });
+    fireEvent.click(within(confirmation).getByRole('button', { name: 'Réinitialiser la lettre' }));
 
     await waitFor(() => expect(apiMock).toHaveBeenCalledWith('/applications/42/cover-letter/reset', {
       method: 'POST',
