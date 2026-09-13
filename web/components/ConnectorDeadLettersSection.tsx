@@ -25,6 +25,14 @@ export type ConnectorDeadLetter = {
   resolvedAt?: string | null;
 };
 
+type ConnectorDeadLettersViewProps = {
+  entries: ConnectorDeadLetter[];
+  busyId?: number | null;
+  error?: string;
+  message?: string;
+  onResolve: (entry: ConnectorDeadLetter) => void | Promise<void>;
+};
+
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat('fr-FR', {
     dateStyle: 'short',
@@ -63,52 +71,13 @@ function ConnectorDeadLettersSkeleton() {
   );
 }
 
-export function ConnectorDeadLettersSection() {
-  const [entries, setEntries] = useState<ConnectorDeadLetter[] | null>(null);
-  const [busyId, setBusyId] = useState<number | null>(null);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
-
-  const load = useCallback(async (): Promise<void> => {
-    try {
-      const result = await api<ConnectorDeadLetter[]>('/connectors/dead-letters?state=OPEN&limit=50');
-      setEntries(result);
-      setError('');
-    } catch (caughtError: unknown) {
-      setEntries([]);
-      setError(getErrorMessage(caughtError));
-    }
-  }, []);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  const resolve = async (entry: ConnectorDeadLetter): Promise<void> => {
-    setBusyId(entry.id);
-    setError('');
-    setMessage('');
-
-    try {
-      await api(`/connectors/dead-letters/${entry.id}/resolve`, { method: 'POST' });
-      setMessage(`Incident ${entry.connectorCode} marqué comme résolu.`);
-      await load();
-    } catch (caughtError: unknown) {
-      setError(getErrorMessage(caughtError));
-    } finally {
-      setBusyId(null);
-    }
-  };
-
-  if (entries === null) {
-    return (
-      <section aria-labelledby="connector-dead-letter-title" className={styles.section}>
-        <h2 className="section-title" id="connector-dead-letter-title">Incidents persistants</h2>
-        <ConnectorDeadLettersSkeleton />
-      </section>
-    );
-  }
-
+export function ConnectorDeadLettersView({
+  entries,
+  busyId = null,
+  error = '',
+  message = '',
+  onResolve,
+}: ConnectorDeadLettersViewProps) {
   if (entries.length === 0 && error === '' && message === '') {
     return null;
   }
@@ -163,7 +132,7 @@ export function ConnectorDeadLettersSection() {
                   size="small"
                   disabled={busyId !== null}
                   loading={busyId === entry.id}
-                  onClick={() => void resolve(entry)}
+                  onClick={() => void onResolve(entry)}
                 >
                   {busyId === entry.id ? 'Résolution…' : 'Marquer résolu'}
                 </Button>
@@ -173,5 +142,62 @@ export function ConnectorDeadLettersSection() {
         </Card>
       )}
     </section>
+  );
+}
+
+export function ConnectorDeadLettersSection() {
+  const [entries, setEntries] = useState<ConnectorDeadLetter[] | null>(null);
+  const [busyId, setBusyId] = useState<number | null>(null);
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+
+  const load = useCallback(async (): Promise<void> => {
+    try {
+      const result = await api<ConnectorDeadLetter[]>('/connectors/dead-letters?state=OPEN&limit=50');
+      setEntries(result);
+      setError('');
+    } catch (caughtError: unknown) {
+      setEntries([]);
+      setError(getErrorMessage(caughtError));
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const resolve = async (entry: ConnectorDeadLetter): Promise<void> => {
+    setBusyId(entry.id);
+    setError('');
+    setMessage('');
+
+    try {
+      await api(`/connectors/dead-letters/${entry.id}/resolve`, { method: 'POST' });
+      setMessage(`Incident ${entry.connectorCode} marqué comme résolu.`);
+      await load();
+    } catch (caughtError: unknown) {
+      setError(getErrorMessage(caughtError));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  if (entries === null) {
+    return (
+      <section aria-labelledby="connector-dead-letter-title" className={styles.section}>
+        <h2 className="section-title" id="connector-dead-letter-title">Incidents persistants</h2>
+        <ConnectorDeadLettersSkeleton />
+      </section>
+    );
+  }
+
+  return (
+    <ConnectorDeadLettersView
+      entries={entries}
+      busyId={busyId}
+      error={error}
+      message={message}
+      onResolve={resolve}
+    />
   );
 }
