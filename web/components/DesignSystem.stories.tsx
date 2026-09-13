@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { expect, within } from 'storybook/test';
 
 import {
   Button,
@@ -226,6 +227,21 @@ export const ProgressStates: Story = {
       <ProgressBar value={25} label="Synchronisation" valueText="25 % terminé" />
       <ProgressBar value={64} label="Objectif candidatures" valueText="64 % atteint" tone="good" />
       <ProgressBar value={90} label="Quota" valueText="90 % utilisé" tone="warn" />
+      <ProgressBar value={-15} label="Progression minimale" valueText="0 %" />
+      <ProgressBar value={135} label="Progression maximale" valueText="100 %" tone="bad" />
     </div>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const syncProgress = canvas.getByRole('progressbar', { name: 'Synchronisation' });
+    const minimumProgress = canvas.getByRole('progressbar', { name: 'Progression minimale' });
+    const maximumProgress = canvas.getByRole('progressbar', { name: 'Progression maximale' });
+
+    await expect(syncProgress).toHaveAttribute('aria-valuemin', '0');
+    await expect(syncProgress).toHaveAttribute('aria-valuemax', '100');
+    await expect(syncProgress).toHaveAttribute('aria-valuenow', '25');
+    await expect(syncProgress).toHaveAttribute('aria-valuetext', '25 % terminé');
+    await expect(minimumProgress).toHaveAttribute('aria-valuenow', '0');
+    await expect(maximumProgress).toHaveAttribute('aria-valuenow', '100');
+  },
 };
