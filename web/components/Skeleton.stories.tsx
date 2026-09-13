@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { expect, within } from 'storybook/test';
 
 import { Card, DataList, DataListItem, DataToolbar } from './UI';
 import { Skeleton, SkeletonGroup } from './Skeleton';
@@ -6,6 +7,7 @@ import { Skeleton, SkeletonGroup } from './Skeleton';
 const meta = {
   title: 'Feedback/Skeleton',
   component: SkeletonGroup,
+  tags: ['autodocs'],
   parameters: {
     docs: {
       description: {
@@ -30,6 +32,13 @@ export const Basic: Story = {
       </div>
     ),
   },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const status = canvas.getByRole('status', { name: 'Chargement du contenu' });
+
+    await expect(status).toHaveAttribute('aria-busy', 'true');
+    await expect(status).toHaveAttribute('aria-live', 'polite');
+  },
 };
 
 export const CardLoading: Story = {
@@ -46,6 +55,10 @@ export const CardLoading: Story = {
         </div>
       </Card>
     ),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('status', { name: 'Chargement du résumé' })).toBeInTheDocument();
   },
 };
 
@@ -73,5 +86,11 @@ export const DenseListLoading: Story = {
         </DataList>
       </Card>
     ),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByRole('status', { name: 'Chargement des candidatures' })).toBeInTheDocument();
+    await expect(canvas.getByRole('list', { name: 'Candidatures en cours de chargement' })).toBeInTheDocument();
   },
 };
