@@ -10,10 +10,20 @@ import { getErrorMessage } from '@/lib/errors';
 
 import styles from './ApplicationGoals.module.css';
 
-type GoalDraft = {
+export type GoalDraft = {
   daily: string;
   weekly: string;
   monthly: string;
+};
+
+type ApplicationGoalsSettingsViewProps = {
+  draft: GoalDraft;
+  error?: string;
+  loading?: boolean;
+  saved?: boolean;
+  saving?: boolean;
+  onDraftChange: (period: keyof GoalDraft, value: string) => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 };
 
 function draftFromSnapshot(snapshot: ApplicationGoalSnapshot): GoalDraft {
@@ -27,6 +37,90 @@ function draftFromSnapshot(snapshot: ApplicationGoalSnapshot): GoalDraft {
 function toGoalValue(value: string): number {
   const parsed = Number.parseInt(value, 10);
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+}
+
+export function ApplicationGoalsSettingsView({
+  draft,
+  error = '',
+  loading = false,
+  saved = false,
+  saving = false,
+  onDraftChange,
+  onSubmit,
+}: ApplicationGoalsSettingsViewProps) {
+  return (
+    <div className={styles.settingsSection}>
+      <Card>
+        <h2 className="section-title">Objectifs de candidatures</h2>
+        <p className="muted">Configure ici le rythme de candidatures. La Review Queue affiche uniquement la progression.</p>
+
+        {loading ? (
+          <SkeletonGroup label="Chargement des objectifs de candidatures" className={styles.settingsForm}>
+            <div className={styles.settingsGrid}>
+              {[0, 1, 2].map((index) => (
+                <div key={index} className={styles.goalSkeletonField}>
+                  <Skeleton width="48%" height={12} />
+                  <Skeleton height={40} />
+                </div>
+              ))}
+            </div>
+            <div className={styles.settingsFooter}>
+              <Skeleton width="58%" height={12} />
+              <Skeleton width={180} height={34} />
+            </div>
+          </SkeletonGroup>
+        ) : (
+          <form className={styles.settingsForm} onSubmit={onSubmit}>
+            <div className={styles.settingsGrid}>
+              <FormField label="Objectif / jour">
+                <input
+                  aria-label="Objectif journalier de candidatures"
+                  min="0"
+                  max="100"
+                  inputMode="numeric"
+                  type="number"
+                  value={draft.daily}
+                  onChange={(event) => onDraftChange('daily', event.target.value)}
+                />
+              </FormField>
+              <FormField label="Objectif / semaine">
+                <input
+                  aria-label="Objectif hebdomadaire de candidatures"
+                  min="0"
+                  max="500"
+                  inputMode="numeric"
+                  type="number"
+                  value={draft.weekly}
+                  onChange={(event) => onDraftChange('weekly', event.target.value)}
+                />
+              </FormField>
+              <FormField label="Objectif / mois">
+                <input
+                  aria-label="Objectif mensuel de candidatures"
+                  min="0"
+                  max="2000"
+                  inputMode="numeric"
+                  type="number"
+                  value={draft.monthly}
+                  onChange={(event) => onDraftChange('monthly', event.target.value)}
+                />
+              </FormField>
+            </div>
+
+            <div className={styles.settingsFooter}>
+              <p className={styles.settingsHint}>0 désactive une cadence · semaine du lundi au dimanche · fuseau horaire du navigateur.</p>
+              <Button loading={saving} size="small" type="submit">
+                {saving ? 'Enregistrement…' : 'Enregistrer les objectifs'}
+              </Button>
+            </div>
+
+            {error !== '' && <ErrorBox message={error} />}
+            {saved && <InlineFeedback tone="success">Objectifs enregistrés.</InlineFeedback>}
+          </form>
+        )}
+      </Card>
+    </div>
+  );
 }
 
 export function ApplicationGoalsSettings() {
@@ -83,76 +177,14 @@ export function ApplicationGoalsSettings() {
   };
 
   return (
-    <div className={styles.settingsSection}>
-      <Card>
-        <h2 className="section-title">Objectifs de candidatures</h2>
-        <p className="muted">Configure ici le rythme de candidatures. La Review Queue affiche uniquement la progression.</p>
-
-        {snapshot === null && error === '' ? (
-          <SkeletonGroup label="Chargement des objectifs de candidatures" className={styles.settingsForm}>
-            <div className={styles.settingsGrid}>
-              {[0, 1, 2].map((index) => (
-                <div key={index} className={styles.goalSkeletonField}>
-                  <Skeleton width="48%" height={12} />
-                  <Skeleton height={40} />
-                </div>
-              ))}
-            </div>
-            <div className={styles.settingsFooter}>
-              <Skeleton width="58%" height={12} />
-              <Skeleton width={180} height={34} />
-            </div>
-          </SkeletonGroup>
-        ) : (
-          <form className={styles.settingsForm} onSubmit={(event) => void save(event)}>
-            <div className={styles.settingsGrid}>
-              <FormField label="Objectif / jour">
-                <input
-                  aria-label="Objectif journalier de candidatures"
-                  min="0"
-                  max="100"
-                  inputMode="numeric"
-                  type="number"
-                  value={draft.daily}
-                  onChange={(event) => setDraft((current) => ({ ...current, daily: event.target.value }))}
-                />
-              </FormField>
-              <FormField label="Objectif / semaine">
-                <input
-                  aria-label="Objectif hebdomadaire de candidatures"
-                  min="0"
-                  max="500"
-                  inputMode="numeric"
-                  type="number"
-                  value={draft.weekly}
-                  onChange={(event) => setDraft((current) => ({ ...current, weekly: event.target.value }))}
-                />
-              </FormField>
-              <FormField label="Objectif / mois">
-                <input
-                  aria-label="Objectif mensuel de candidatures"
-                  min="0"
-                  max="2000"
-                  inputMode="numeric"
-                  type="number"
-                  value={draft.monthly}
-                  onChange={(event) => setDraft((current) => ({ ...current, monthly: event.target.value }))}
-                />
-              </FormField>
-            </div>
-
-            <div className={styles.settingsFooter}>
-              <p className={styles.settingsHint}>0 désactive une cadence · semaine du lundi au dimanche · fuseau horaire du navigateur.</p>
-              <Button loading={saving} size="small" type="submit">
-                {saving ? 'Enregistrement…' : 'Enregistrer les objectifs'}
-              </Button>
-            </div>
-
-            {error !== '' && <ErrorBox message={error} />}
-            {saved && <InlineFeedback tone="success">Objectifs enregistrés.</InlineFeedback>}
-          </form>
-        )}
-      </Card>
-    </div>
+    <ApplicationGoalsSettingsView
+      draft={draft}
+      error={error}
+      loading={snapshot === null && error === ''}
+      saved={saved}
+      saving={saving}
+      onDraftChange={(period, value) => setDraft((current) => ({ ...current, [period]: value }))}
+      onSubmit={(event) => void save(event)}
+    />
   );
 }
