@@ -14,7 +14,7 @@ const meta = {
     docs: {
       description: {
         component:
-          'Shared floating surface for compact contextual controls. Use an explicit landmark role and accessible name when the panel represents a meaningful region; keep content focused and avoid turning it into a second full page.',
+          'Shared floating surface for compact contextual controls. Prefer linking a visible title with ariaLabelledBy when the panel represents a meaningful region; use ariaLabel when no visible label exists. Keep content focused and avoid turning it into a second full page.',
       },
     },
   },
@@ -28,12 +28,12 @@ export const ContextualControls: Story = {
     <div style={{ minHeight: 240, padding: 24, background: 'var(--surface-subtle, transparent)' }}>
       <FloatingPanel
         role="region"
-        ariaLabel="Synchronisation ciblée"
+        ariaLabelledBy="targeted-sync-title"
         style={{ width: 'min(100%, 420px)' }}
       >
         <div style={{ display: 'grid', gap: 12 }}>
           <div>
-            <strong>Synchronisation ciblée</strong>
+            <strong id="targeted-sync-title">Synchronisation ciblée</strong>
             <p className="muted" style={{ margin: '0.35rem 0 0' }}>
               Lance uniquement les connecteurs sélectionnés sans modifier leur état global.
             </p>
