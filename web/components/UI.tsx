@@ -244,12 +244,14 @@ export function FloatingPanel({
   id,
   role,
   ariaLabel,
+  ariaLabelledBy,
   style,
 }: {
   children: React.ReactNode;
   id?: string;
   role?: React.AriaRole;
   ariaLabel?: string;
+  ariaLabelledBy?: string;
   style?: React.CSSProperties;
 }) {
   return (
@@ -257,6 +259,7 @@ export function FloatingPanel({
       id={id}
       role={role}
       aria-label={ariaLabel}
+      aria-labelledby={ariaLabelledBy}
       className={uiStyles.floatingPanel}
       style={style}
     >
