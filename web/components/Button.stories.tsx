@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { expect, within } from 'storybook/test';
 
 import { Button } from './UI';
 
@@ -22,7 +23,15 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Primary: Story = {};
+export const Primary: Story = {
+  play: async ({ canvasElement }) => {
+    const button = within(canvasElement).getByRole('button', { name: 'Préparer la candidature' });
+
+    await expect(button).toBeEnabled();
+    await expect(button).toHaveAttribute('type', 'button');
+    await expect(button).not.toHaveAttribute('aria-busy');
+  },
+};
 
 export const Secondary: Story = {
   args: {
@@ -50,12 +59,24 @@ export const Loading: Story = {
     children: 'Enregistrement…',
     loading: true,
   },
+  play: async ({ canvasElement }) => {
+    const button = within(canvasElement).getByRole('button', { name: 'Enregistrement…' });
+
+    await expect(button).toBeDisabled();
+    await expect(button).toHaveAttribute('aria-busy', 'true');
+  },
 };
 
 export const Disabled: Story = {
   args: {
     children: 'Envoyer',
     disabled: true,
+  },
+  play: async ({ canvasElement }) => {
+    const button = within(canvasElement).getByRole('button', { name: 'Envoyer' });
+
+    await expect(button).toBeDisabled();
+    await expect(button).not.toHaveAttribute('aria-busy');
   },
 };
 
@@ -64,5 +85,23 @@ export const Small: Story = {
     children: 'Relancer',
     size: 'small',
     variant: 'secondary',
+  },
+};
+
+export const LongLabelAtNarrowWidth: Story = {
+  args: {
+    children: 'Préparer la candidature avant validation finale',
+  },
+  parameters: {
+    viewport: {
+      defaultViewport: 'mobile1',
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getByRole('button', {
+        name: 'Préparer la candidature avant validation finale',
+      }),
+    ).toBeEnabled();
   },
 };
