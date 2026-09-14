@@ -6,7 +6,7 @@ import offlineStyles from './offline-state.module.css';
 import uiStyles from './UI.module.css';
 
 export function PageHeader({ title, description, actions }: { title:string; description?:string; actions?:React.ReactNode }) {
-  return <div className="page-header"><div><h1>{title}</h1>{description && <p>{description}</p>}</div>{actions && <div>{actions}</div>}</div>;
+  return <header className="page-header"><div><h1>{title}</h1>{description && <p>{description}</p>}</div>{actions && <div>{actions}</div>}</header>;
 }
 export function Card({ children, className='', ...props }: React.HTMLAttributes<HTMLElement>) { return <section {...props} className={`card ${className}`}>{children}</section>; }
 export function Badge({ children, tone='neutral' }: { children:React.ReactNode; tone?:'neutral'|'good'|'warn'|'bad'|'blue' }) { return <span className={`badge ${tone}`}>{children}</span>; }
