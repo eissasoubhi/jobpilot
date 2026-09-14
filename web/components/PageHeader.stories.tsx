@@ -28,6 +28,7 @@ export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
+    await expect(canvas.getByRole('banner')).toBeInTheDocument();
     await expect(canvas.getByRole('heading', { level: 1, name: 'Candidatures' })).toBeInTheDocument();
     await expect(
       canvas.getByText('Suivez les candidatures qui demandent votre attention et gardez le prochain geste visible.'),
