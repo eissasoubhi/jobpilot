@@ -88,7 +88,7 @@ export function OffersSelectiveSyncPanel() {
         <div>
           <strong>Synchroniser les sources</strong>
           <div className="small muted" style={{ marginTop: 5 }}>
-            Lance toutes les sources éligibles ou limite volontairement le prochain run aux connecteurs de ton choix.
+            Synchronise toutes les sources éligibles ou choisis les connecteurs à utiliser pour cette synchronisation.
           </div>
         </div>
         {connectors === null ? (
