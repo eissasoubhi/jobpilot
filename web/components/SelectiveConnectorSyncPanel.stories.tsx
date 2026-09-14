@@ -96,7 +96,7 @@ const meta = {
     docs: {
       description: {
         component:
-          'Sélection explicite des connecteurs du prochain run manuel. Les connecteurs désactivés, non configurés ou bloqués par politique restent visibles avec leur raison, sans devenir sélectionnables.',
+          'Sélection explicite des connecteurs pour une synchronisation manuelle. Les connecteurs désactivés, non configurés ou bloqués par politique restent visibles avec leur raison, sans devenir sélectionnables.',
       },
     },
   },
