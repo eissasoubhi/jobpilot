@@ -8,7 +8,7 @@ import uiStyles from './UI.module.css';
 export function PageHeader({ title, description, actions }: { title:string; description?:string; actions?:React.ReactNode }) {
   return <div className="page-header"><div><h1>{title}</h1>{description && <p>{description}</p>}</div>{actions && <div>{actions}</div>}</div>;
 }
-export function Card({ children, className='' }: { children:React.ReactNode; className?:string }) { return <section className={`card ${className}`}>{children}</section>; }
+export function Card({ children, className='', ...props }: React.HTMLAttributes<HTMLElement>) { return <section {...props} className={`card ${className}`}>{children}</section>; }
 export function Badge({ children, tone='neutral' }: { children:React.ReactNode; tone?:'neutral'|'good'|'warn'|'bad'|'blue' }) { return <span className={`badge ${tone}`}>{children}</span>; }
 export function Empty({ children }: { children:React.ReactNode }) { return <div className="empty" role="status" aria-live="polite">{children}</div>; }
 export function Loading() { return <div className="loading" role="status" aria-live="polite" aria-busy="true">Chargement…</div>; }
