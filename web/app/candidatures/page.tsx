@@ -244,7 +244,7 @@ export default function ApplicationsPage() {
           ) : (
             <InlineFeedback tone="warning">
               <strong>JobPilot n’envoie pas automatiquement la candidature.</strong>{' '}
-              Il prépare le CV et le message, ainsi qu’une lettre uniquement lorsque l’offre la demande. Tu dois ouvrir le site d’origine, compléter ou coller les informations, puis valider l’envoi sur ce site lorsqu’aucun e-mail officiel utilisable n’est disponible.
+              Il prépare le CV, le message et la lettre de motivation. Tu dois ouvrir le site d’origine, compléter ou coller les informations, puis valider l’envoi sur ce site lorsqu’aucun e-mail officiel utilisable n’est disponible.
             </InlineFeedback>
           )}
 
