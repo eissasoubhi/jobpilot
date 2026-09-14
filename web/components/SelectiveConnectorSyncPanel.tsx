@@ -133,7 +133,7 @@ export function SelectiveConnectorSyncPanel({ connectors, syncing, onSynchronize
           }}
         >
           <div className="actions" style={{ justifyContent: 'space-between', marginBottom: 12 }}>
-            <strong id="selective-connector-sync-title">Connecteurs du prochain run</strong>
+            <strong id="selective-connector-sync-title">Choisir les connecteurs à synchroniser</strong>
             <div className="actions">
               <Button variant="secondary" size="small" onClick={selectAll}>Tout sélectionner</Button>
               <Button variant="secondary" size="small" onClick={selectNone}>Tout désélectionner</Button>
