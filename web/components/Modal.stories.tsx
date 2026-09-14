@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useId, useRef, useState } from 'react';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { ConfirmDialog } from './ConfirmDialog';
 import { Modal } from './Modal';
@@ -10,6 +11,12 @@ const meta = {
   component: Modal,
   parameters: {
     layout: 'fullscreen',
+    docs: {
+      description: {
+        component:
+          'Accessible modal contract for JobPilot decision flows. Dialogs expose a clear accessible name, can describe consequences, move focus into the active surface, keep keyboard focus contained, and support explicit dismissal without changing underlying business behavior.',
+      },
+    },
   },
   tags: ['autodocs'],
   args: {
@@ -101,6 +108,25 @@ function NestedConfirmationExample() {
 
 export const LabelledAndDescribed: Story = {
   render: () => <LabelledModalExample />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const dialog = canvas.getByRole('dialog', { name: 'Préparer cette candidature' });
+    const title = canvas.getByRole('heading', { name: 'Préparer cette candidature' });
+    const description = canvas.getByText('Vérifiez les informations avant de poursuivre. Rien n’est envoyé automatiquement.');
+    const note = canvas.getByPlaceholderText('Ajouter une note');
+    const continueButton = canvas.getByRole('button', { name: 'Continuer' });
+
+    await expect(dialog).toHaveAttribute('aria-modal', 'true');
+    await expect(dialog).toHaveAttribute('aria-labelledby', title.id);
+    await expect(dialog).toHaveAttribute('aria-describedby', description.id);
+    await expect(note).toHaveFocus();
+
+    await userEvent.tab({ shift: true });
+    await expect(continueButton).toHaveFocus();
+
+    await userEvent.tab();
+    await expect(note).toHaveFocus();
+  },
 };
 
 export const BackdropLocked: Story = {
@@ -126,6 +152,18 @@ export const DirectAccessibleLabel: Story = {
         )}
       </div>
     );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const dialog = canvas.getByRole('dialog', { name: 'Informations sur la synchronisation' });
+    const closeButton = canvas.getByRole('button', { name: 'Fermer' });
+
+    await expect(dialog).toHaveAttribute('aria-modal', 'true');
+    await expect(closeButton).toHaveFocus();
+
+    await userEvent.keyboard('{Escape}');
+    await expect(canvas.queryByRole('dialog')).not.toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'Rouvrir le dialogue' })).toBeVisible();
   },
 };
 
