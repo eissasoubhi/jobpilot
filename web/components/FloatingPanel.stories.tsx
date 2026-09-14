@@ -1,10 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { expect, within } from 'storybook/test';
 
 import { Button, FloatingPanel } from './UI';
 
 const meta = {
   title: 'Design System/Feedback/FloatingPanel',
   component: FloatingPanel,
+  tags: ['autodocs'],
   args: {
     children: null,
   },
@@ -44,6 +46,14 @@ export const ContextualControls: Story = {
       </FloatingPanel>
     </div>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const panel = canvas.getByRole('region', { name: 'Synchronisation ciblée' });
+
+    await expect(panel).toBeInTheDocument();
+    await expect(within(panel).getByRole('button', { name: 'Lancer' })).toBeEnabled();
+    await expect(within(panel).getByRole('button', { name: 'Fermer' })).toBeEnabled();
+  },
 };
 
 export const CompactDiagnostic: Story = {
@@ -62,4 +72,45 @@ export const CompactDiagnostic: Story = {
       </FloatingPanel>
     </div>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const panel = canvas.getByRole('region', { name: 'Détail de synchronisation' });
+
+    await expect(within(panel).getByText('2 nouvelles offres · 8 déjà connues')).toBeInTheDocument();
+    await expect(within(panel).getByRole('button', { name: 'Voir le détail' })).toBeEnabled();
+  },
+};
+
+export const LongContentOnNarrowViewport: Story = {
+  parameters: {
+    viewport: {
+      defaultViewport: 'mobile1',
+    },
+  },
+  render: () => (
+    <div style={{ minHeight: 320, padding: 16 }}>
+      <FloatingPanel
+        role="region"
+        ariaLabel="Diagnostic du connecteur France Travail"
+        style={{ width: 'min(100%, 420px)' }}
+      >
+        <div style={{ display: 'grid', gap: 12 }}>
+          <strong>Diagnostic du connecteur France Travail</strong>
+          <p className="muted" style={{ margin: 0 }}>
+            La dernière synchronisation contient plusieurs résultats déjà connus et un détail technique plus long qui doit rester lisible sans masquer l’action utile.
+          </p>
+          <Button size="small" variant="secondary">Voir le diagnostic complet</Button>
+        </div>
+      </FloatingPanel>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const panel = canvas.getByRole('region', { name: 'Diagnostic du connecteur France Travail' });
+
+    await expect(panel).toBeInTheDocument();
+    await expect(
+      within(panel).getByRole('button', { name: 'Voir le diagnostic complet' }),
+    ).toBeEnabled();
+  },
 };
