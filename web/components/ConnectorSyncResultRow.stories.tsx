@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { ConnectorSyncResultRow } from './ConnectorSyncResultRow';
 
@@ -7,6 +8,12 @@ const meta = {
   component: ConnectorSyncResultRow,
   parameters: {
     layout: 'padded',
+    docs: {
+      description: {
+        component:
+          'Per-source synchronization status for JobPilot. The row keeps state explicit in text, summarizes results first, and progressively discloses diagnostics and errors.',
+      },
+    },
   },
   args: {
     name: 'France Travail',
@@ -18,12 +25,23 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Waiting: Story = {};
+export const Waiting: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('region', { name: 'Synchronisation France Travail' })).toBeInTheDocument();
+    await expect(canvas.getByText('En attente')).toBeInTheDocument();
+  },
+};
 
 export const Running: Story = {
   args: {
     name: 'Gmail — alertes emploi',
     state: 'running',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('En cours')).toBeInTheDocument();
+    await expect(canvas.getByText('Récupération, normalisation et import en cours…')).toBeInTheDocument();
   },
 };
 
@@ -44,6 +62,13 @@ export const SuccessfulImport: Story = {
       missing_must_have: 2,
       explicit_conflict: 1,
     },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('8 nouvelles offres · 12 déjà connues · 3 hors profil')).toBeInTheDocument();
+    await userEvent.click(canvas.getByText('Voir le détail de France Travail'));
+    await expect(canvas.getByText('Durée : 8,5 s')).toBeInTheDocument();
+    await expect(canvas.getByText(/2 prérequis principaux manquants/)).toBeInTheDocument();
   },
 };
 
@@ -68,6 +93,12 @@ export const GmailWithoutExtractedOffers: Story = {
       messagesFailed: 0,
     },
   },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByText('Voir le détail de Gmail — propositions recruteurs'));
+    await expect(canvas.getByText(/7 emails trouvés, mais aucune offre exploitable/)).toBeInTheDocument();
+    await expect(canvas.getByText(/Diagnostic Gmail/)).toBeInTheDocument();
+  },
 };
 
 export const PartialWarning: Story = {
@@ -85,6 +116,12 @@ export const PartialWarning: Story = {
     },
     error: 'Deux fiches n’ont pas pu être normalisées complètement. Les offres valides ont été conservées et les échecs restent visibles pour diagnostic.',
   },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('Avec avertissement')).toBeInTheDocument();
+    await userEvent.click(canvas.getByText('Voir le détail de Extension navigateur — import assisté'));
+    await expect(canvas.getByText(/Deux fiches n’ont pas pu être normalisées/)).toBeInTheDocument();
+  },
 };
 
 export const LongErrorMessage: Story = {
@@ -101,5 +138,19 @@ export const LongErrorMessage: Story = {
       durationMs: 60543,
     },
     error: 'La synchronisation a été interrompue après plusieurs réponses temporaires de la source. JobPilot n’a pas contourné la limitation et aucune nouvelle tentative automatique n’est lancée depuis cette vue.',
+  },
+  parameters: {
+    viewport: {
+      defaultViewport: 'mobile1',
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(
+      canvas.getByRole('region', {
+        name: 'Synchronisation Source partenaire avec un nom volontairement très long pour vérifier la pression responsive',
+      }),
+    ).toBeInTheDocument();
+    await expect(canvas.getByText('En erreur')).toBeInTheDocument();
   },
 };
