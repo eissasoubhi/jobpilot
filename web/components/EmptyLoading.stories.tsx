@@ -1,9 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { expect, within } from 'storybook/test';
 
 import { ButtonLink, Card, Empty, Loading } from './UI';
 
 const meta = {
   title: 'Feedback/EmptyAndLoading',
+  tags: ['autodocs'],
   parameters: {
     docs: {
       description: {
@@ -36,6 +38,14 @@ export const EmptyState: Story = {
       </Empty>
     </Card>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const status = canvas.getByRole('status');
+
+    await expect(status).toHaveAttribute('aria-live', 'polite');
+    await expect(status).toHaveTextContent('Aucune candidature à traiter');
+    await expect(canvas.getByRole('link', { name: 'Voir les offres' })).toHaveAttribute('href', '/offres');
+  },
 };
 
 export const EmptyWithoutAction: Story = {
@@ -45,6 +55,15 @@ export const EmptyWithoutAction: Story = {
       <Empty>Aucun résultat pour ces filtres.</Empty>
     </Card>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const status = canvas.getByRole('status');
+
+    await expect(status).toHaveAttribute('aria-live', 'polite');
+    await expect(status).toHaveTextContent('Aucun résultat pour ces filtres.');
+    await expect(canvas.queryByRole('link')).not.toBeInTheDocument();
+    await expect(canvas.queryByRole('button')).not.toBeInTheDocument();
+  },
 };
 
 export const LoadingState: Story = {
@@ -54,4 +73,45 @@ export const LoadingState: Story = {
       <Loading />
     </Card>
   ),
+  play: async ({ canvasElement }) => {
+    const status = within(canvasElement).getByRole('status');
+
+    await expect(status).toHaveTextContent('Chargement…');
+    await expect(status).toHaveAttribute('aria-live', 'polite');
+    await expect(status).toHaveAttribute('aria-busy', 'true');
+  },
+};
+
+export const LongEmptyStateOnMobile: Story = {
+  name: 'Long empty state on mobile',
+  parameters: {
+    viewport: {
+      defaultViewport: 'mobile1',
+    },
+  },
+  render: () => (
+    <Card>
+      <Empty>
+        <div style={{ display: 'grid', gap: '0.75rem', justifyItems: 'start' }}>
+          <div>
+            <strong>Aucune candidature ne correspond encore à cette combinaison de filtres</strong>
+            <p style={{ marginBottom: 0 }}>
+              Modifiez les critères actifs ou revenez à la liste complète des offres pour poursuivre votre recherche sans perdre le contexte actuel.
+            </p>
+          </div>
+          <ButtonLink href="/offres" variant="secondary" size="small">
+            Revenir à toutes les offres disponibles
+          </ButtonLink>
+        </div>
+      </Empty>
+    </Card>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByRole('status')).toHaveAttribute('aria-live', 'polite');
+    await expect(
+      canvas.getByRole('link', { name: 'Revenir à toutes les offres disponibles' }),
+    ).toHaveAttribute('href', '/offres');
+  },
 };
