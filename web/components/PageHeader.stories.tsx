@@ -58,7 +58,9 @@ export const WithoutDescription: Story = {
     const canvas = within(canvasElement);
 
     await expect(canvas.getByRole('heading', { level: 1, name: 'CRM recruteurs' })).toBeInTheDocument();
-    await expect(canvas.queryByRole('paragraph')).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByText('Suivez les candidatures qui demandent votre attention et gardez le prochain geste visible.'),
+    ).not.toBeInTheDocument();
   },
 };
 
