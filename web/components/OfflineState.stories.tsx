@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { OfflineState } from './UI';
 
@@ -9,7 +10,7 @@ const meta = {
   args: {
     title: 'JobPilot ne peut pas charger les offres',
     message: 'Vérifiez que l’API locale est démarrée, puis réessayez.',
-    onRetry: () => undefined,
+    onRetry: fn(),
   },
   parameters: {
     docs: {
@@ -24,12 +25,30 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Recoverable: Story = {};
+export const Recoverable: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const status = canvas.getByRole('status');
+    const retry = canvas.getByRole('button', { name: 'Réessayer' });
+
+    await expect(status).toHaveAttribute('aria-live', 'polite');
+    await expect(status).toHaveTextContent('JobPilot ne peut pas charger les offres');
+    await expect(retry).toBeEnabled();
+    await userEvent.click(retry);
+    await expect(args.onRetry).toHaveBeenCalledOnce();
+  },
+};
 
 export const WithTechnicalDetail: Story = {
   args: {
     message: 'Les offres restent indisponibles pour le moment. Relancez la connexion après avoir vérifié le service local.',
     technicalDetail: 'GET /api/job-offers → ECONNREFUSED',
+    onRetry: fn(),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByRole('status')).toHaveTextContent('Détail technique : GET /api/job-offers → ECONNREFUSED');
   },
 };
 
@@ -38,5 +57,31 @@ export const CustomRecoveryAction: Story = {
     title: 'La synchronisation locale est indisponible',
     message: 'Aucune donnée n’a été modifiée. Vous pouvez relancer la vérification quand le service est de nouveau accessible.',
     retryLabel: 'Vérifier à nouveau',
+    onRetry: fn(),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByRole('button', { name: 'Vérifier à nouveau' })).toBeEnabled();
+  },
+};
+
+export const LongContentOnNarrowViewport: Story = {
+  args: {
+    title: 'Connexion au service de synchronisation temporairement indisponible',
+    message:
+      'JobPilot conserve les offres et candidatures déjà chargées. Réessayez lorsque le service local est de nouveau accessible ; aucune candidature externe ne sera envoyée pendant cette indisponibilité.',
+    technicalDetail:
+      'Le service local n’a pas répondu après plusieurs secondes. Vérifiez que les conteneurs JobPilot sont démarrés avant de relancer.',
+    onRetry: fn(),
+  },
+  parameters: {
+    viewport: { defaultViewport: 'mobile1' },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByRole('status')).toHaveTextContent('aucune candidature externe ne sera envoyée');
+    await expect(canvas.getByRole('button', { name: 'Réessayer' })).toBeVisible();
   },
 };
