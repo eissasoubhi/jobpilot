@@ -54,8 +54,9 @@ export const Loading: MarketSkillsStory = {
   },
 };
 
-export const Error: MarketSkillsStory = {
-  render: () => <MarketSkillsCard marketSkillsLoader={async () => { throw new Error('indisponible'); }} />,
+export const Failure: MarketSkillsStory = {
+  name: 'Error',
+  render: () => <MarketSkillsCard marketSkillsLoader={async () => { throw new globalThis.Error('indisponible'); }} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByRole('alert')).toHaveTextContent('Les tendances de compétences ne sont pas disponibles pour le moment.');
