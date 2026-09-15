@@ -27,9 +27,9 @@ const meta = {
 } satisfies Meta<typeof MarketSkillsCard>;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type MarketSkillsStory = StoryObj<typeof meta>;
 
-export const Loaded: Story = {
+export const Loaded: MarketSkillsStory = {
   render: () => <MarketSkillsCard marketSkillsLoader={async () => marketSkills} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -38,7 +38,7 @@ export const Loaded: Story = {
   },
 };
 
-export const Empty: Story = {
+export const Empty: MarketSkillsStory = {
   render: () => <MarketSkillsCard marketSkillsLoader={async () => ({ ...marketSkills, analyzedJobs: 0, demanded: [], matching: [], unconfigured: [] })} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -46,7 +46,7 @@ export const Empty: Story = {
   },
 };
 
-export const Loading: Story = {
+export const Loading: MarketSkillsStory = {
   render: () => <MarketSkillsCard marketSkillsLoader={() => new Promise(() => undefined)} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -54,7 +54,7 @@ export const Loading: Story = {
   },
 };
 
-export const Error: Story = {
+export const Error: MarketSkillsStory = {
   render: () => <MarketSkillsCard marketSkillsLoader={async () => { throw new Error('indisponible'); }} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
