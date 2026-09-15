@@ -110,7 +110,14 @@ export function OfferEditorialDetail({ job }: { job: Job }) {
                       </span>
                     </div>
                     {source.sourceUrl && (
-                      <ButtonLink href={source.sourceUrl} target="_blank" rel="noreferrer" variant="secondary" size="small">
+                      <ButtonLink
+                        href={source.sourceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        variant="secondary"
+                        size="small"
+                        aria-label={`Voir l’annonce sur ${source.sourceName || source.sourceCode}`}
+                      >
                         Voir la source
                       </ButtonLink>
                     )}
