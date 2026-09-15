@@ -57,7 +57,8 @@ describe('CrmOrganizationCard', () => {
     expect(screen.getByText('Recruteur')).toBeInTheDocument();
     expect(screen.getByText('Correspondant Gmail')).toBeInTheDocument();
 
-    expect(screen.getByRole('link', { name: 'Ouvrir l’offre' })).toHaveAttribute('href', 'https://example.test/jobs/42');
+    expect(screen.getByRole('link', { name: 'Voir dans JobPilot' })).toHaveAttribute('href', '/offres/42');
+    expect(screen.getByRole('link', { name: 'Voir l’annonce source' })).toHaveAttribute('href', 'https://example.test/jobs/42');
     expect(screen.getByText('Score 88')).toBeInTheDocument();
   });
 

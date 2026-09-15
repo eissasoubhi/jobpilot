@@ -198,17 +198,28 @@ export function CrmOrganizationCard({
                       <Badge>{statusLabel(offer.status)}</Badge>
                     </div>
                   </div>
-                  {offer.sourceUrl && (
-                    <ButtonLink
-                      href={offer.sourceUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      variant="secondary"
-                      size="small"
-                    >
-                      Ouvrir l’offre
-                    </ButtonLink>
-                  )}
+                  <div className="actions">
+                    {offer.id && (
+                      <ButtonLink
+                        href={`/offres/${offer.id}`}
+                        variant="secondary"
+                        size="small"
+                      >
+                        Voir dans JobPilot
+                      </ButtonLink>
+                    )}
+                    {offer.sourceUrl && (
+                      <ButtonLink
+                        href={offer.sourceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        variant="secondary"
+                        size="small"
+                      >
+                        Voir l’annonce source
+                      </ButtonLink>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
