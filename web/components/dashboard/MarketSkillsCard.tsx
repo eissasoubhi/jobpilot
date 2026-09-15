@@ -25,7 +25,7 @@ type MarketSkillsData = {
 };
 
 type MarketSkillsCardProps = {
-  loadMarketSkills?: () => Promise<unknown>;
+  marketSkillsLoader?: () => Promise<unknown>;
 };
 
 function isMarketSkillsData(value: unknown): value is MarketSkillsData {
@@ -60,12 +60,13 @@ function SignalList({ items }: { items: SkillSignal[] }) {
 
 const loadDefaultMarketSkills = () => api<unknown>('/dashboard/market-skills');
 
-export function MarketSkillsCard({ loadMarketSkills = loadDefaultMarketSkills }: MarketSkillsCardProps = {}) {
+export function MarketSkillsCard({ marketSkillsLoader }: MarketSkillsCardProps = {}) {
   const [data, setData] = useState<MarketSkillsData | null>(null);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let active = true;
+    const loadMarketSkills = marketSkillsLoader ?? loadDefaultMarketSkills;
 
     void loadMarketSkills()
       .then((result) => {
@@ -88,7 +89,7 @@ export function MarketSkillsCard({ loadMarketSkills = loadDefaultMarketSkills }:
     return () => {
       active = false;
     };
-  }, [loadMarketSkills]);
+  }, [marketSkillsLoader]);
 
   return (
     <Card>
