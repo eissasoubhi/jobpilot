@@ -24,6 +24,10 @@ type MarketSkillsData = {
   unconfigured: SkillSignal[];
 };
 
+type MarketSkillsCardProps = {
+  marketSkillsLoader?: () => Promise<unknown>;
+};
+
 function isMarketSkillsData(value: unknown): value is MarketSkillsData {
   if (typeof value !== 'object' || value === null) return false;
 
@@ -54,14 +58,17 @@ function SignalList({ items }: { items: SkillSignal[] }) {
   );
 }
 
-export function MarketSkillsCard() {
+const loadDefaultMarketSkills = () => api<unknown>('/dashboard/market-skills');
+
+export function MarketSkillsCard({ marketSkillsLoader }: MarketSkillsCardProps = {}) {
   const [data, setData] = useState<MarketSkillsData | null>(null);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let active = true;
+    const loadMarketSkills = marketSkillsLoader ?? loadDefaultMarketSkills;
 
-    void api<unknown>('/dashboard/market-skills')
+    void loadMarketSkills()
       .then((result) => {
         if (!active) return;
 
@@ -82,7 +89,7 @@ export function MarketSkillsCard() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [marketSkillsLoader]);
 
   return (
     <Card>
@@ -95,9 +102,9 @@ export function MarketSkillsCard() {
       </div>
 
       {failed ? (
-        <div className={styles.emptyState}>Les tendances de compétences ne sont pas disponibles pour le moment.</div>
+        <div className={styles.emptyState} role="alert">Les tendances de compétences ne sont pas disponibles pour le moment.</div>
       ) : data === null ? (
-        <div className={styles.loadingState}>Analyse des tendances…</div>
+        <div className={styles.loadingState} role="status">Analyse des tendances…</div>
       ) : data.analyzedJobs === 0 ? (
         <div className={styles.emptyState}>Pas encore assez d’offres qualifiées sur la période pour dégager une tendance.</div>
       ) : (
