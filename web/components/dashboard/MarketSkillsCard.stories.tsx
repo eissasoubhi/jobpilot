@@ -30,7 +30,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Loaded: Story = {
-  args: { loadMarketSkills: async () => marketSkills },
+  render: () => <MarketSkillsCard marketSkillsLoader={async () => marketSkills} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByText('Symfony')).toBeInTheDocument();
@@ -39,7 +39,7 @@ export const Loaded: Story = {
 };
 
 export const Empty: Story = {
-  args: { loadMarketSkills: async () => ({ ...marketSkills, analyzedJobs: 0, demanded: [], matching: [], unconfigured: [] }) },
+  render: () => <MarketSkillsCard marketSkillsLoader={async () => ({ ...marketSkills, analyzedJobs: 0, demanded: [], matching: [], unconfigured: [] })} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByText(/Pas encore assez d’offres qualifiées/)).toBeInTheDocument();
@@ -47,7 +47,7 @@ export const Empty: Story = {
 };
 
 export const Loading: Story = {
-  args: { loadMarketSkills: () => new Promise(() => undefined) },
+  render: () => <MarketSkillsCard marketSkillsLoader={() => new Promise(() => undefined)} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('status')).toHaveTextContent('Analyse des tendances…');
@@ -55,7 +55,7 @@ export const Loading: Story = {
 };
 
 export const Error: Story = {
-  args: { loadMarketSkills: async () => { throw new Error('indisponible'); } },
+  render: () => <MarketSkillsCard marketSkillsLoader={async () => { throw new Error('indisponible'); }} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByRole('alert')).toHaveTextContent('Les tendances de compétences ne sont pas disponibles pour le moment.');
