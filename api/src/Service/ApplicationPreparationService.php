@@ -7,6 +7,8 @@ namespace App\Service;
 use App\Entity\Application;
 use App\Entity\CandidateProfile;
 use App\Entity\JobOffer;
+use App\Timeline\JobTimelineEventType;
+use App\Timeline\JobTimelineRecorder;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class ApplicationPreparationService
@@ -15,6 +17,7 @@ final class ApplicationPreparationService
         private EntityManagerInterface $em,
         private ApplicationCvRepairService $cvRepair,
         private ApplicationContentBuilder $contentBuilder,
+        private JobTimelineRecorder $timeline,
         private ?LocalDataService $data = null,
     ) {}
 
@@ -41,6 +44,16 @@ final class ApplicationPreparationService
         );
         $job->markPrepared();
         $this->em->persist($application);
+        $this->timeline->record(
+            $job,
+            $existing === null
+                ? JobTimelineEventType::PREPARATION_CREATED
+                : JobTimelineEventType::PREPARATION_UPDATED,
+            [],
+            $application,
+            null,
+            'application-preparation',
+        );
         $this->em->flush();
 
         return $application;
