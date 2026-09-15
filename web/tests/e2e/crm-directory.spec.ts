@@ -98,7 +98,8 @@ test('CRM directory exposes validated contacts, filters and persistent annotatio
   await expect(page.getByRole('heading', { name: 'Final Client' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'jane@acme.test' })).toHaveAttribute('href', 'mailto:jane@acme.test');
   await expect(page.getByRole('link', { name: '+33 6 00 00 00 00' })).toHaveAttribute('href', 'tel:+33 6 00 00 00 00');
-  await expect(page.getByRole('link', { name: 'Ouvrir l’offre' })).toHaveAttribute('href', 'https://example.test/jobs/42');
+  await expect(page.getByRole('link', { name: 'Voir dans JobPilot' })).toHaveAttribute('href', '/offres/42');
+  await expect(page.getByRole('link', { name: 'Voir l’annonce source' })).toHaveAttribute('href', 'https://example.test/jobs/42');
 
   await page.getByLabel('Rôle de l’organisation').selectOption('CLIENT');
   await expect(page.getByRole('heading', { name: 'Final Client' })).toBeVisible();
