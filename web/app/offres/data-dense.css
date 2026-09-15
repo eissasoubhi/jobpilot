@@ -98,6 +98,10 @@ select[aria-label="Filtrer par source"] {
 }
 
 @media (max-width: 760px) {
+  select[aria-label="Filtrer par source"] {
+    min-height: 44px;
+  }
+
   ul[aria-label="Offres filtrées"] {
     border-radius: var(--radius-md, 10px);
   }
