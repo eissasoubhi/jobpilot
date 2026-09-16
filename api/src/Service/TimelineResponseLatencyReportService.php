@@ -34,32 +34,51 @@ final class TimelineResponseLatencyReportService
             ->getQuery()
             ->getResult();
 
+        $rows = [];
+        foreach ($events as $event) {
+            $applicationId = $event->getApplication()?->getId();
+            if ($applicationId === null) {
+                continue;
+            }
+            $rows[] = [
+                'applicationId' => $applicationId,
+                'type' => $event->getType(),
+                'occurredAt' => $event->getOccurredAt(),
+            ];
+        }
+
+        return self::summarize($rows);
+    }
+
+    /**
+     * @param list<array{applicationId: int, type: string, occurredAt: \DateTimeImmutable}> $events
+     * @return array{measured: int, medianHours: float|null}
+     */
+    public static function summarize(array $events): array
+    {
+        usort($events, static fn (array $left, array $right): int => $left['occurredAt'] <=> $right['occurredAt']);
+
         /** @var array<int, \DateTimeImmutable> $submittedAt */
         $submittedAt = [];
         /** @var array<int, float> $firstResponseHours */
         $firstResponseHours = [];
 
         foreach ($events as $event) {
-            $applicationId = $event->getApplication()?->getId();
-            if ($applicationId === null) {
+            $applicationId = $event['applicationId'];
+            if ($event['type'] === JobTimelineEventType::APPLICATION_SUBMITTED) {
+                $submittedAt[$applicationId] ??= $event['occurredAt'];
                 continue;
             }
-
-            if ($event->getType() === JobTimelineEventType::APPLICATION_SUBMITTED) {
-                $submittedAt[$applicationId] ??= $event->getOccurredAt();
-                continue;
-            }
-
-            if (isset($firstResponseHours[$applicationId], $submittedAt[$applicationId])) {
+            if (isset($firstResponseHours[$applicationId])) {
                 continue;
             }
 
             $submission = $submittedAt[$applicationId] ?? null;
-            if ($submission === null || $event->getOccurredAt() < $submission) {
+            if ($submission === null || $event['occurredAt'] < $submission) {
                 continue;
             }
 
-            $firstResponseHours[$applicationId] = ($event->getOccurredAt()->getTimestamp() - $submission->getTimestamp()) / 3600;
+            $firstResponseHours[$applicationId] = ($event['occurredAt']->getTimestamp() - $submission->getTimestamp()) / 3600;
         }
 
         $durations = array_values($firstResponseHours);
@@ -74,9 +93,6 @@ final class TimelineResponseLatencyReportService
             ? $durations[$middle]
             : ($durations[$middle - 1] + $durations[$middle]) / 2;
 
-        return [
-            'measured' => $count,
-            'medianHours' => round($median, 1),
-        ];
+        return ['measured' => $count, 'medianHours' => round($median, 1)];
     }
 }
