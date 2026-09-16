@@ -1,8 +1,19 @@
 # Connector roadmap catalog
 
-This file is a generated-facing documentation surface for the acquisition roadmap exposed in JobPilot.
+This catalog distinguishes operational connectors from product-roadmap sources.
 
-The table below is covered by a parity test. Any change to a source code, status, or intended mode in `web/lib/connector-roadmap.ts` must keep this catalog synchronized.
+Roadmap entries are descriptive only. They are not registered in the backend, cannot be enabled, and cannot trigger synchronization. The frontend source of truth is `web/lib/connector-roadmap.ts`.
+
+The table below is covered by a parity test. Any change to a source code, status, or intended mode must be made in the frontend source first, then reflected here in the same pull request.
+
+## Statuses
+
+- `OPERATIONAL`: the connector is registered in the backend and can run when its required configuration is present.
+- `PLANNED`: an authorized technical channel is identified, but implementation or required access is still pending.
+- `UNDER_REVIEW`: scheduled collection remains blocked until the source-specific technical and compliance review is complete.
+- `EMAIL_OR_EXTENSION_ONLY`: JobPilot may use recognized Gmail alerts or a user-triggered browser import, but must not automate login or background scraping.
+
+## Current roadmap
 
 <!-- connector-roadmap:start -->
 | Source | Code | Status | Intended modes |
@@ -39,3 +50,9 @@ The table below is covered by a parity test. Any change to a source code, status
 | France Travail | `france-travail` | `OPERATIONAL` | `API` |
 | LesJeudis | `lesjeudis` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 <!-- connector-roadmap:end -->
+
+## Rules
+
+Adding a source to this catalog does not authorize collection. A real scheduled connector still requires its own policy, contract tests, operational limits, source documentation, and an explicit allowed or authorized-only compliance decision.
+
+The catalog deliberately contains no secrets, API credentials, selectors, cookies, or instructions for bypassing authentication, CAPTCHA, quotas, or source restrictions.
