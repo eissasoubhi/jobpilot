@@ -15,6 +15,7 @@ use App\Service\Ai\AiJobMatchAnalyzerInterface;
 use App\Service\Ai\AiMatchingConfigurationStore;
 use App\Service\Ai\AiOfferIntakeFilter;
 use App\Service\JobProcessor;
+use App\Timeline\JobTimelineRecorder;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use PHPUnit\Framework\TestCase;
@@ -87,6 +88,7 @@ final class CanonicalJobOfferAiIntakeFilterTest extends TestCase
             new CanonicalJobMatcher($em),
             $processor,
             $filter,
+            new JobTimelineRecorder($em),
         );
         $settings = (new UserSettings())->fill([
             'targetJobs' => ['Senior PHP Symfony Developer'],
