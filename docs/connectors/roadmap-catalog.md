@@ -30,7 +30,7 @@ The table below is covered by a parity test. Any change to a source code, status
 | LeHibou | `le-hibou` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Mindquest | `mindquest` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | WeLoveDevs | `we-love-devs` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
-| Sept Lieues | `sept-lieues` | `UNDER_REVIEW` | — |
+| Sept Lieues | `sept-lieues` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Jean-Michel.io | `jean-michel` | `UNDER_REVIEW` | — |
 | Welcome to the Jungle | `welcome-to-the-jungle` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Cadremploi | `cadremploi` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
