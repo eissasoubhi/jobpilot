@@ -34,6 +34,8 @@ Le modèle ne fournit aucun setter de mutation. Une correction future doit crée
 
 ## Producteurs raccordés
 
+Le catalogue canonique produit `OFFER_IMPORTED` lorsqu’une nouvelle offre canonique est effectivement créée et `SOURCE_OCCURRENCE_ADDED` lorsqu’une nouvelle occurrence est fusionnée à une offre existante. Ces événements sont ajoutés par `CanonicalJobOfferService` dans la même unité de travail que l’occurrence, avec la source `job-catalog`. Le payload reste minimal : code source et, pour une fusion, type de rapprochement. Une occurrence déjà connue (`DUPLICATE`) ne crée aucun nouvel événement.
+
 La préparation automatique d’une candidature produit maintenant `PREPARATION_CREATED` lors de la première création de la candidature et `PREPARATION_UPDATED` lorsqu’une préparation existante est régénérée. L’événement est ajouté par `ApplicationPreparationService` dans la même unité de travail que la préparation et utilise la source `application-preparation`. Son payload reste vide : le contenu du CV, du message et de la lettre n’est jamais dupliqué dans la timeline.
 
 La mise à jour manuelle d’une candidature vers `SUBMITTED` produit `APPLICATION_SUBMITTED` dans la même unité de travail que le changement de statut. Une nouvelle modification d’une candidature déjà `SUBMITTED` ne produit pas de doublon. L’événement utilise la date `submittedAt` comme date métier et conserve le statut précédent dans son payload.

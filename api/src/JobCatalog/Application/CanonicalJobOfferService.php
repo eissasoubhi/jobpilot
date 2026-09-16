@@ -10,6 +10,8 @@ use App\Entity\JobSourceOccurrence;
 use App\Entity\UserSettings;
 use App\Service\Ai\AiOfferIntakeFilter;
 use App\Service\JobProcessor;
+use App\Timeline\JobTimelineEventType;
+use App\Timeline\JobTimelineRecorder;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class CanonicalJobOfferService
@@ -21,6 +23,7 @@ final class CanonicalJobOfferService
         private CanonicalJobMatcher $matcher,
         private JobProcessor $processor,
         private AiOfferIntakeFilter $intakeFilter,
+        private JobTimelineRecorder $timeline,
         ?ContaminatedJobDescriptionRepairer $descriptionRepairer = null,
     ) {
         $this->descriptionRepairer = $descriptionRepairer ?? new ContaminatedJobDescriptionRepairer();
@@ -96,6 +99,17 @@ final class CanonicalJobOfferService
             $job->enrichFromOccurrence($payload);
             $this->em->persist($occurrence);
             $this->em->persist($job);
+            $this->timeline->record(
+                $job,
+                JobTimelineEventType::SOURCE_OCCURRENCE_ADDED,
+                [
+                    'sourceCode' => $sourceCode,
+                    'matchType' => $match['matchType'],
+                ],
+                null,
+                null,
+                'job-catalog',
+            );
             $this->em->flush();
 
             return new CanonicalJobImportResult(
@@ -140,6 +154,14 @@ final class CanonicalJobOfferService
             ['Première occurrence de cette offre canonique.'],
         );
         $this->em->persist($occurrence);
+        $this->timeline->record(
+            $job,
+            JobTimelineEventType::OFFER_IMPORTED,
+            ['sourceCode' => $sourceCode],
+            null,
+            null,
+            'job-catalog',
+        );
         $this->em->flush();
 
         return new CanonicalJobImportResult(
