@@ -28,7 +28,7 @@ The table below is covered by a parity test. Any change to a source code, status
 | Comet | `comet` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Cherry Pick | `cherry-pick` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | LeHibou | `le-hibou` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
-| Mindquest | `mindquest` | `UNDER_REVIEW` | — |
+| Mindquest | `mindquest` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | WeLoveDevs | `we-love-devs` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Sept Lieues | `sept-lieues` | `UNDER_REVIEW` | — |
 | Jean-Michel.io | `jean-michel` | `UNDER_REVIEW` | — |
