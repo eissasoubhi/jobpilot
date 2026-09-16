@@ -14,7 +14,7 @@ final class TimelineApplicationLatencyReportService
     {
     }
 
-    /** @return array{measured: int, medianHours: float|null} */
+    /** @return array{measured: int, averageHours: float|null, medianHours: float|null} */
     public function report(): array
     {
         /** @var list<JobTimelineEvent> $events */
@@ -50,7 +50,7 @@ final class TimelineApplicationLatencyReportService
 
     /**
      * @param list<array{jobOfferId: int, type: string, occurredAt: \DateTimeImmutable}> $events
-     * @return array{measured: int, medianHours: float|null}
+     * @return array{measured: int, averageHours: float|null, medianHours: float|null}
      */
     public static function summarize(array $events): array
     {
@@ -83,14 +83,19 @@ final class TimelineApplicationLatencyReportService
         sort($durations, SORT_NUMERIC);
         $count = count($durations);
         if ($count === 0) {
-            return ['measured' => 0, 'medianHours' => null];
+            return ['measured' => 0, 'averageHours' => null, 'medianHours' => null];
         }
 
         $middle = intdiv($count, 2);
         $median = $count % 2 === 1
             ? $durations[$middle]
             : ($durations[$middle - 1] + $durations[$middle]) / 2;
+        $average = array_sum($durations) / $count;
 
-        return ['measured' => $count, 'medianHours' => round($median, 1)];
+        return [
+            'measured' => $count,
+            'averageHours' => round($average, 1),
+            'medianHours' => round($median, 1),
+        ];
     }
 }
