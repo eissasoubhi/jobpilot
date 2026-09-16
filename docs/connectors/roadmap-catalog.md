@@ -19,7 +19,7 @@ The table below is covered by a parity test. Any change to a source code, status
 | Source | Code | Status | Intended modes |
 | --- | --- | --- | --- |
 | LinkedIn | `linkedin` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
-| Malt | `malt` | `UNDER_REVIEW` | — |
+| Malt | `malt` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Free-Work | `free-work` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Apec | `apec` | `PLANNED` | `XML`, `GMAIL`, `EXTENSION` |
 | Collective.work | `collective-work` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
