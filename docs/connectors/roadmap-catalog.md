@@ -26,7 +26,7 @@ The table below is covered by a parity test. Any change to a source code, status
 | Crème de la Crème | `creme-de-la-creme` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | FreelanceRepublik | `freelance-republik` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Comet | `comet` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
-| Cherry Pick | `cherry-pick` | `UNDER_REVIEW` | — |
+| Cherry Pick | `cherry-pick` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | LeHibou | `le-hibou` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Mindquest | `mindquest` | `UNDER_REVIEW` | — |
 | WeLoveDevs | `we-love-devs` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
