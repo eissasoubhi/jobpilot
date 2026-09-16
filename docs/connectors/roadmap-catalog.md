@@ -31,7 +31,7 @@ The table below is covered by a parity test. Any change to a source code, status
 | Mindquest | `mindquest` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | WeLoveDevs | `we-love-devs` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Sept Lieues | `sept-lieues` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
-| Jean-Michel.io | `jean-michel` | `UNDER_REVIEW` | — |
+| Jean-Michel.io | `jean-michel` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Welcome to the Jungle | `welcome-to-the-jungle` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Cadremploi | `cadremploi` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | HelloWork | `hellowork` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
