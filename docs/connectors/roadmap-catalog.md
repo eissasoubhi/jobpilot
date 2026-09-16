@@ -25,7 +25,7 @@ The table below is covered by a parity test. Any change to a source code, status
 | Collective.work | `collective-work` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Crème de la Crème | `creme-de-la-creme` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | FreelanceRepublik | `freelance-republik` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
-| Comet | `comet` | `UNDER_REVIEW` | — |
+| Comet | `comet` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Cherry Pick | `cherry-pick` | `UNDER_REVIEW` | — |
 | LeHibou | `le-hibou` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Mindquest | `mindquest` | `UNDER_REVIEW` | — |
