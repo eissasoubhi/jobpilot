@@ -42,17 +42,34 @@ describe('OfferApplicationSummary updates', () => {
     const onApplicationUpdated = vi.fn();
     apiMock.mockResolvedValueOnce(submitted);
 
-    render(
-      <OfferApplicationSummary
-        application={application()}
-        onApplicationUpdated={onApplicationUpdated}
-      />,
-    );
+    render(<OfferApplicationSummary application={application()} onApplicationUpdated={onApplicationUpdated} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Examiner' }));
     fireEvent.click(screen.getByRole('button', { name: 'J’ai envoyé la candidature' }));
 
     await waitFor(() => expect(onApplicationUpdated).toHaveBeenCalledWith(submitted));
+    expect(screen.getByRole('button', { name: 'Annuler la décision' })).toBeInTheDocument();
+  });
+
+  it('undoes a just-recorded reversible decision through the guarded review endpoint', async () => {
+    const submitted = application('SUBMITTED');
+    const ready = application('READY_TO_SUBMIT');
+    const onApplicationUpdated = vi.fn();
+    apiMock.mockResolvedValueOnce(submitted).mockResolvedValueOnce(ready);
+
+    render(<OfferApplicationSummary application={application()} onApplicationUpdated={onApplicationUpdated} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Examiner' }));
+    fireEvent.click(screen.getByRole('button', { name: 'J’ai envoyé la candidature' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Annuler la décision' }));
+
+    await waitFor(() => expect(apiMock).toHaveBeenLastCalledWith(
+      '/applications/42/review-decision/undo',
+      { method: 'POST' },
+    ));
+    expect(onApplicationUpdated).toHaveBeenLastCalledWith(ready);
+    expect(await screen.findByText(/Dernière décision annulée/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Annuler la décision' })).not.toBeInTheDocument();
   });
 
   it('marks a reviewed offer as not matching without any external submission', async () => {
@@ -60,12 +77,7 @@ describe('OfferApplicationSummary updates', () => {
     const onApplicationUpdated = vi.fn();
     apiMock.mockResolvedValueOnce(ignored);
 
-    render(
-      <OfferApplicationSummary
-        application={application()}
-        onApplicationUpdated={onApplicationUpdated}
-      />,
-    );
+    render(<OfferApplicationSummary application={application()} onApplicationUpdated={onApplicationUpdated} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Examiner' }));
     fireEvent.click(screen.getByRole('button', { name: 'Ne correspond pas à mon profil' }));
@@ -79,5 +91,6 @@ describe('OfferApplicationSummary updates', () => {
       }),
     }));
     expect(onApplicationUpdated).toHaveBeenCalledWith(ignored);
+    expect(screen.getByRole('button', { name: 'Annuler la décision' })).toBeInTheDocument();
   });
 });
