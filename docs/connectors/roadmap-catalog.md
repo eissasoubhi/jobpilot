@@ -43,7 +43,7 @@ The table below is covered by a parity test. Any change to a source code, status
 | Kicklox | `kicklox` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Talent.com | `talent-com` | `PLANNED` | `API` |
 | SmartRecruiters | `smartrecruiters` | `OPERATIONAL` | `API` |
-| GetYourJob | `getyourjob` | `UNDER_REVIEW` | — |
+| GetYourJob | `getyourjob` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Le Studio Tech | `le-studio-tech` | `OPERATIONAL` | `SCRAPING_HTTP` |
 | Meteojob | `meteojob` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Michael Page | `michael-page` | `UNDER_REVIEW` | — |
