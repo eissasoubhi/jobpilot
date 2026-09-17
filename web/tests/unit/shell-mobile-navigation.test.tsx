@@ -31,4 +31,14 @@ describe('Shell mobile navigation', () => {
     expect(screen.getByRole('button', { name: 'Fermer' })).toHaveAttribute('aria-expanded', 'true');
     expect(navigation).toHaveClass('is-open');
   });
+
+  it('keeps Offres as the single primary workspace entry instead of duplicating Candidatures', () => {
+    render(<Shell><div>Contenu Offres</div></Shell>);
+
+    const navigation = screen.getByRole('navigation', { name: 'Navigation principale' });
+
+    expect(screen.getByRole('link', { name: /Offres/ })).toHaveAttribute('href', '/offres');
+    expect(screen.getByRole('link', { name: /Review Queue/ })).toHaveAttribute('href', '/offres/review');
+    expect(navigation).not.toHaveTextContent('Candidatures');
+  });
 });
