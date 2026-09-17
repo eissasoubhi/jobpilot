@@ -32,28 +32,24 @@ test('Offers workspace covers preparation, review, manual submission tracking an
   await page.getByRole('button', { name: 'Téléverser' }).click();
   await expect(page.getByText(cvName, { exact: true })).toBeVisible();
 
-  const createdOffer = await page.request.post('/api/job-offers', {
-    data: {
-      title: jobTitle,
-      company: `Acme Offers ${uniqueSuffix}`,
-      location: 'Paris',
-      description: 'Mission Symfony senior avec API Platform. Une lettre de motivation est demandée. Merci de préciser vos prétentions salariales.',
-      source: 'MANUAL',
-      sourceUrl,
-      workMode: 'HYBRID',
-      contractType: 'FREELANCE',
-      salaryMin: 500,
-      salaryMax: 550,
-      salaryCurrency: 'EUR',
-      salaryPeriod: 'DAY',
-    },
-  });
-  expect(createdOffer.ok()).toBeTruthy();
-
   await page.goto('/offres');
+  await page.getByRole('button', { name: 'Ajouter une offre' }).click();
+  const addDialog = page.getByRole('dialog', { name: 'Ajouter une offre' });
+  await addDialog.getByLabel('Source', { exact: true }).fill(`Manual parity ${uniqueSuffix}`);
+  await addDialog.getByLabel('URL').fill(sourceUrl);
+  await addDialog.getByLabel('Intitulé').fill(jobTitle);
+  await addDialog.getByLabel('Entreprise').fill(`Acme Offers ${uniqueSuffix}`);
+  await addDialog.getByLabel('Lieu').fill('Paris');
+  await addDialog.getByLabel('Contrat').selectOption({ label: 'Freelance' });
+  await addDialog.getByLabel('TJM minimum').fill('500');
+  await addDialog.getByLabel('TJM maximum').fill('550');
+  await addDialog
+    .getByLabel('Description')
+    .fill('Mission Symfony senior avec API Platform. Une lettre de motivation est demandée. Merci de préciser vos prétentions salariales.');
+  await addDialog.getByRole('button', { name: 'Analyser et enregistrer' }).click();
+
   const offerCard = page.locator('article').filter({ hasText: jobTitle });
   await expect(offerCard).toBeVisible();
-  await offerCard.getByRole('button', { name: 'Préparer la candidature' }).click();
 
   await expect(offerCard.getByText('Candidature', { exact: true })).toBeVisible();
   await expect(offerCard.getByText(cvName, { exact: true })).toBeVisible();
