@@ -4,6 +4,7 @@ export type CrmFollowUpTask = {
   id: number;
   organizationKey: string;
   contactKey?: string | null;
+  jobOfferId?: number | null;
   title: string;
   note?: string | null;
   dueAt: string;
