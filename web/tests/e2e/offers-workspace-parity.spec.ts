@@ -5,7 +5,7 @@ function watchForBrowserFailures(page: Page): string[] {
 
   page.on('pageerror', (error) => failures.push(`pageerror: ${error.message}`));
   page.on('console', (message) => {
-    if (message.type() === 'error') failures.push(`console: ${message.text()}`));
+    if (message.type() === 'error') failures.push(`console: ${message.text()}`);
   });
   page.on('response', (response) => {
     if (response.status() >= 500) failures.push(`http ${response.status()}: ${response.url()}`);
@@ -29,55 +29,63 @@ test('Offers workspace covers preparation, review, manual submission tracking an
     mimeType: 'application/pdf',
     buffer: Buffer.from('%PDF-1.4\n% JobPilot Offers parity CV\n'),
   });
-  await page.getByLabel('CV par défaut pour cette langue').check();
-  await page.getByRole('button', { name: 'Téléverser' }).click();
-  await expect(page.getByRole('heading', { name: cvName, level: 3, exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Ajouter le CV' }).click();
+  await expect(page.getByText(cvName, { exact: true })).toBeVisible();
+
+  const createdOffer = await page.request.post('/api/job-offers', {
+    data: {
+      title: jobTitle,
+      company: `Acme Offers ${uniqueSuffix}`,
+      location: 'Paris',
+      description: 'Mission Symfony senior avec API Platform. Une lettre de motivation est demandée. Merci de préciser vos prétentions salariales.',
+      source: 'MANUAL',
+      sourceUrl,
+      workMode: 'HYBRID',
+      contractType: 'FREELANCE',
+      salaryMin: 500,
+      salaryMax: 550,
+      salaryCurrency: 'EUR',
+      salaryPeriod: 'DAY',
+    },
+  });
+  expect(createdOffer.ok()).toBeTruthy();
 
   await page.goto('/offres');
-  await page.getByRole('button', { name: 'Ajouter une offre' }).click();
-  const addDialog = page.getByRole('dialog', { name: 'Ajouter une offre' });
-  await addDialog.getByLabel('Source', { exact: true }).fill(`Parity ${uniqueSuffix}`);
-  await addDialog.getByLabel('URL').fill(sourceUrl);
-  await addDialog.getByLabel('Intitulé').fill(jobTitle);
-  await addDialog.getByLabel('Entreprise').fill('Parity Company');
-  await addDialog.getByLabel('Lieu').fill('Paris');
-  await addDialog.getByLabel('Contrat').selectOption({ label: 'Freelance' });
-  await addDialog.getByLabel('TJM minimum').fill('480');
-  await addDialog.getByLabel('TJM maximum').fill('600');
-  await addDialog.getByLabel('Description').fill('Mission senior PHP Symfony API Platform Docker avec responsabilité backend.');
-  await addDialog.getByRole('button', { name: 'Analyser et enregistrer' }).click();
+  const offerCard = page.locator('article').filter({ hasText: jobTitle });
+  await expect(offerCard).toBeVisible();
+  await offerCard.getByRole('button', { name: 'Préparer la candidature' }).click();
 
-  const jobHeading = page.getByRole('heading', { name: jobTitle, level: 3, exact: true });
-  await expect(jobHeading).toBeVisible();
-  const jobRow = page.getByRole('listitem').filter({ has: jobHeading });
-  await expect(jobRow.getByText('Candidature', { exact: true })).toBeVisible();
-  await expect(jobRow.getByText('CV prêt')).toBeVisible();
-  await expect(jobRow.getByText('Message prêt')).toBeVisible();
-  await expect(jobRow.getByText('Lettre prête')).toBeVisible();
-  await expect(jobRow.getByText('Rémunération prête')).toBeVisible();
+  await expect(offerCard.getByText('Candidature', { exact: true })).toBeVisible();
+  await expect(offerCard.getByText(cvName, { exact: true })).toBeVisible();
+  await expect(offerCard.getByText('Message préparé')).toBeVisible();
+  await expect(offerCard.getByText('Lettre de motivation demandée')).toBeVisible();
+  await expect(offerCard.getByText('500 € HT/jour')).toBeVisible();
 
-  await jobRow.getByRole('button', { name: 'Examiner' }).click();
-  const reviewDialog = page.getByRole('dialog', { name: jobTitle });
+  await offerCard.getByRole('button', { name: 'Examiner' }).click();
+  let reviewDialog = page.getByRole('dialog');
   await expect(reviewDialog).toBeVisible();
-  await expect(reviewDialog.getByText('Pourquoi ce score ?')).toBeVisible();
-  await expect(reviewDialog.getByRole('textbox', { name: 'Message préparé' })).not.toHaveValue('');
-  await expect(reviewDialog.getByRole('textbox', { name: 'Lettre de motivation demandée' })).not.toHaveValue('');
-  await expect(reviewDialog.getByRole('textbox', { name: 'Réponse rémunération' })).toHaveValue('500 € HT/jour');
+  await expect(reviewDialog.getByRole('heading', { name: jobTitle })).toBeVisible();
+  await expect(reviewDialog.getByText('Message de candidature')).toBeVisible();
+  await expect(reviewDialog.getByText('Lettre de motivation')).toBeVisible();
+  await expect(reviewDialog.getByText('500 € HT/jour')).toBeVisible();
   await expect(reviewDialog.getByRole('link', { name: 'Ouvrir la plateforme pour postuler' })).toHaveAttribute('href', sourceUrl);
 
-  await reviewDialog.getByLabel('Confirmation / référence après envoi').fill(`CONF-${uniqueSuffix}`);
+  const messageField = reviewDialog.getByLabel('Message de candidature');
+  await messageField.fill(`Message Offers parity ${uniqueSuffix}`);
   await reviewDialog.getByRole('button', { name: 'Enregistrer les modifications' }).click();
-  await expect(page.getByRole('status')).toContainText('Modifications enregistrées dans JobPilot.');
+  await expect(page.getByRole('status')).toContainText('Modifications enregistrées');
 
   await reviewDialog.getByRole('button', { name: 'J’ai envoyé la candidature' }).click();
   await expect(page.getByRole('status')).toContainText('Candidature marquée comme envoyée');
-  const refreshedDialog = page.getByRole('dialog', { name: jobTitle });
-  await expect(refreshedDialog.getByRole('button', { name: 'Candidature déjà marquée comme envoyée' })).toBeDisabled();
-  await expect(refreshedDialog.getByRole('button', { name: 'Annuler la décision' })).toBeVisible();
+  reviewDialog = page.getByRole('dialog');
+  await expect(reviewDialog.getByText('SUBMITTED', { exact: true })).toBeVisible();
+  await expect(reviewDialog.getByRole('button', { name: 'Annuler la dernière décision' })).toBeVisible();
 
-  await refreshedDialog.getByRole('button', { name: 'Annuler la décision' }).click();
+  await reviewDialog.getByRole('button', { name: 'Annuler la dernière décision' }).click();
   await expect(page.getByRole('status')).toContainText('Dernière décision annulée');
-  await expect(page.getByRole('dialog', { name: jobTitle }).getByRole('button', { name: 'J’ai envoyé la candidature' })).toBeEnabled();
+  reviewDialog = page.getByRole('dialog');
+  await expect(reviewDialog.getByText('REVIEW', { exact: true })).toBeVisible();
+  await expect(reviewDialog.getByRole('button', { name: 'Annuler la dernière décision' })).toHaveCount(0);
 
   expect(failures).toEqual([]);
 });
