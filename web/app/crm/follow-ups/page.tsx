@@ -17,6 +17,7 @@ export default function CrmFollowUpsPage() {
   const [status, setStatus] = useState<CrmFollowUpStatus>('open');
   const [organizationKey, setOrganizationKey] = useState('');
   const [contactKey, setContactKey] = useState('');
+  const [jobOfferId, setJobOfferId] = useState('');
   const [title, setTitle] = useState('');
   const [note, setNote] = useState('');
   const [dueAt, setDueAt] = useState('');
@@ -51,9 +52,15 @@ export default function CrmFollowUpsPage() {
     try {
       await api(`/crm/organizations/${encodeURIComponent(organizationKey)}/follow-ups`, {
         method: 'POST',
-        body: JSON.stringify({ contactKey: contactKey || null, title: title.trim(), note: note.trim(), dueAt }),
+        body: JSON.stringify({
+          contactKey: contactKey || null,
+          jobOfferId: jobOfferId === '' ? null : Number(jobOfferId),
+          title: title.trim(),
+          note: note.trim(),
+          dueAt,
+        }),
       });
-      setTitle(''); setNote(''); setDueAt(''); setContactKey('');
+      setTitle(''); setNote(''); setDueAt(''); setContactKey(''); setJobOfferId('');
       setNotice('La tâche de relance a été créée.');
       await load();
     } catch (caughtError: unknown) {
@@ -107,7 +114,7 @@ export default function CrmFollowUpsPage() {
                   id="follow-up-organization"
                   value={organizationKey}
                   disabled={busy}
-                  onChange={(event) => { setOrganizationKey(event.target.value); setContactKey(''); }}
+                  onChange={(event) => { setOrganizationKey(event.target.value); setContactKey(''); setJobOfferId(''); }}
                 >
                   <option value="">Sélectionner une organisation</option>
                   {directory.organizations.map((organization) => <option key={organization.key} value={organization.key}>{organization.name}</option>)}
@@ -123,6 +130,19 @@ export default function CrmFollowUpsPage() {
                   <option value="">Toute l’organisation</option>
                   {selectedOrganization?.contacts.map((contact) => (
                     <option key={contact.key} value={contact.key}>{contact.name || contact.email || contact.phone || contact.key}</option>
+                  ))}
+                </select>
+              </FormField>
+              <FormField label="Opportunité facultative" hint="Associer une offre permet d’ajouter la relance à sa timeline métier lorsqu’elle est terminée.">
+                <select
+                  id="follow-up-job-offer"
+                  value={jobOfferId}
+                  disabled={busy || selectedOrganization === null || selectedOrganization.latestOffers.length === 0}
+                  onChange={(event) => setJobOfferId(event.target.value)}
+                >
+                  <option value="">Relance générale</option>
+                  {selectedOrganization?.latestOffers.filter((offer) => offer.id != null).map((offer) => (
+                    <option key={offer.id} value={offer.id ?? ''}>{offer.title}</option>
                   ))}
                 </select>
               </FormField>
@@ -182,12 +202,13 @@ export default function CrmFollowUpsPage() {
             {tasks.map((task) => {
               const organization = directory?.organizations.find((item) => item.key === task.organizationKey);
               const contact = organization?.contacts.find((item) => item.key === task.contactKey);
+              const linkedOffer = task.jobOfferId == null ? null : organization?.latestOffers.find((offer) => offer.id === task.jobOfferId);
               const due = followUpDueLabel(task);
               return <DataListItem key={task.id}>
                 <div className={styles.taskMain}>
                   <div className={styles.taskBadges}><Badge tone={due === 'OVERDUE' ? 'bad' : due === 'TODAY' ? 'warn' : due === 'COMPLETED' ? 'good' : 'blue'}>{due === 'OVERDUE' ? 'En retard' : due === 'TODAY' ? 'Aujourd’hui' : due === 'COMPLETED' ? 'Terminée' : 'À venir'}</Badge><Badge>{formatFollowUpDate(task.dueAt)}</Badge></div>
                   <strong className={styles.taskTitle}>{task.title}</strong>
-                  <div className={`small muted ${styles.taskMeta}`}>{organization?.name ?? task.organizationKey}{contact ? ` · ${contact.name || contact.email || contact.key}` : ''}</div>
+                  <div className={`small muted ${styles.taskMeta}`}>{organization?.name ?? task.organizationKey}{contact ? ` · ${contact.name || contact.email || contact.key}` : ''}{linkedOffer ? ` · ${linkedOffer.title}` : ''}</div>
                   {task.note && <p className={`small ${styles.taskNote}`}>{task.note}</p>}
                 </div>
                 <div className={styles.taskAction}>
