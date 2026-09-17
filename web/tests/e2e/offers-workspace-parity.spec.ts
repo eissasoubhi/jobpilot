@@ -62,7 +62,7 @@ test('Offers workspace covers preparation, review, manual submission tracking an
   await expect(reviewDialog.getByText('Pourquoi ce score ?')).toBeVisible();
   await expect(reviewDialog.getByRole('textbox', { name: 'Message préparé' })).not.toHaveValue('');
   await expect(reviewDialog.getByRole('textbox', { name: 'Lettre de motivation demandée' })).not.toHaveValue('');
-  await expect(reviewDialog.getByRole('textbox', { name: 'Réponse rémunération' })).toHaveValue('TJM proposé : 500 €');
+  await expect(reviewDialog.getByRole('textbox', { name: 'Réponse rémunération' })).toHaveValue('500 € HT/jour');
   await expect(reviewDialog.getByRole('link', { name: 'Ouvrir la plateforme pour postuler' })).toHaveAttribute('href', sourceUrl);
 
   await reviewDialog.getByLabel('Confirmation / référence après envoi').fill(`CONF-${uniqueSuffix}`);
