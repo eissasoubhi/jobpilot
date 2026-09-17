@@ -37,7 +37,7 @@ The table below is covered by a parity test. Any change to a source code, status
 | HelloWork | `hellowork` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Jobijoba | `jobijoba` | `PLANNED` | `API` |
 | EURES | `eures` | `PLANNED` | `API` |
-| Freelance-Informatique | `freelance-informatique` | `UNDER_REVIEW` | — |
+| Freelance-Informatique | `freelance-informatique` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Indeed | `indeed` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Adzuna | `adzuna` | `OPERATIONAL` | `API` |
 | Kicklox | `kicklox` | `UNDER_REVIEW` | — |
