@@ -40,7 +40,7 @@ The table below is covered by a parity test. Any change to a source code, status
 | Freelance-Informatique | `freelance-informatique` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Indeed | `indeed` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Adzuna | `adzuna` | `OPERATIONAL` | `API` |
-| Kicklox | `kicklox` | `UNDER_REVIEW` | — |
+| Kicklox | `kicklox` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Talent.com | `talent-com` | `PLANNED` | `API` |
 | SmartRecruiters | `smartrecruiters` | `OPERATIONAL` | `API` |
 | GetYourJob | `getyourjob` | `UNDER_REVIEW` | — |
