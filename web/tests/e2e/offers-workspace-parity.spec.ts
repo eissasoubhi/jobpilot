@@ -5,7 +5,7 @@ function watchForBrowserFailures(page: Page): string[] {
 
   page.on('pageerror', (error) => failures.push(`pageerror: ${error.message}`));
   page.on('console', (message) => {
-    if (message.type() === 'error') failures.push(`console: ${message.text()}`);
+    if (message.type() === 'error') failures.push(`console: ${message.text()}`));
   });
   page.on('response', (response) => {
     if (response.status() >= 500) failures.push(`http ${response.status()}: ${response.url()}`);
@@ -67,17 +67,17 @@ test('Offers workspace covers preparation, review, manual submission tracking an
 
   await reviewDialog.getByLabel('Confirmation / référence après envoi').fill(`CONF-${uniqueSuffix}`);
   await reviewDialog.getByRole('button', { name: 'Enregistrer les modifications' }).click();
-  await expect(reviewDialog.getByRole('status')).toContainText('Modifications enregistrées dans JobPilot.');
+  await expect(page.getByRole('status')).toContainText('Modifications enregistrées dans JobPilot.');
 
   await reviewDialog.getByRole('button', { name: 'J’ai envoyé la candidature' }).click();
-  const submittedFeedback = reviewDialog.getByRole('status');
-  await expect(submittedFeedback).toContainText('Candidature marquée comme envoyée');
-  await expect(reviewDialog.getByRole('button', { name: 'Candidature déjà marquée comme envoyée' })).toBeDisabled();
-  await expect(reviewDialog.getByRole('button', { name: 'Annuler la décision' })).toBeVisible();
+  await expect(page.getByRole('status')).toContainText('Candidature marquée comme envoyée');
+  const refreshedDialog = page.getByRole('dialog', { name: jobTitle });
+  await expect(refreshedDialog.getByRole('button', { name: 'Candidature déjà marquée comme envoyée' })).toBeDisabled();
+  await expect(refreshedDialog.getByRole('button', { name: 'Annuler la décision' })).toBeVisible();
 
-  await reviewDialog.getByRole('button', { name: 'Annuler la décision' }).click();
-  await expect(reviewDialog.getByRole('status')).toContainText('Dernière décision annulée');
-  await expect(reviewDialog.getByRole('button', { name: 'J’ai envoyé la candidature' })).toBeEnabled();
+  await refreshedDialog.getByRole('button', { name: 'Annuler la décision' }).click();
+  await expect(page.getByRole('status')).toContainText('Dernière décision annulée');
+  await expect(page.getByRole('dialog', { name: jobTitle }).getByRole('button', { name: 'J’ai envoyé la candidature' })).toBeEnabled();
 
   expect(failures).toEqual([]);
 });
