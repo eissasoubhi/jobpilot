@@ -11,7 +11,7 @@ describe('Michael Page acquisition review', () => {
     expect(connector?.modes).toEqual(['GMAIL', 'EXTENSION']);
     expect(connector?.note).toContain('Revue du 17/09/2026');
     expect(connector?.note).toContain('alertes emploi par e-mail');
-    expect(connector?.note).toContain('Aucun API/RSS public');
+    expect(connector?.note).toContain('aucun API/RSS public');
     expect(connector?.note).toContain('visibilité publique seule');
     expect(connector?.nextStep).toContain('Michael Page/PageGroup');
     expect(connector?.nextStep).toContain('canal officiel');
