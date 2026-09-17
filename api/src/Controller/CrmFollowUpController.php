@@ -24,7 +24,7 @@ final class CrmFollowUpController
     public function __construct(
         private EntityManagerInterface $entityManager,
         private OrganizationCrmDirectoryBuilder $directoryBuilder,
-        private JobTimelineRecorder $timeline,
+        private ?JobTimelineRecorder $timeline = null,
     ) {
     }
 
@@ -122,7 +122,7 @@ final class CrmFollowUpController
         $wasCompleted = $task->isCompleted();
         $task->setCompleted($payload['completed']);
         if (!$wasCompleted && $task->isCompleted() && $task->getJobOffer() instanceof JobOffer) {
-            $this->timeline->record(
+            $this->timeline?->record(
                 $task->getJobOffer(),
                 JobTimelineEventType::FOLLOW_UP,
                 ['crmFollowUpTaskId' => $task->getId()],
