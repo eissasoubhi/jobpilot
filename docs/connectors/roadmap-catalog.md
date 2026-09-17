@@ -46,7 +46,7 @@ The table below is covered by a parity test. Any change to a source code, status
 | GetYourJob | `getyourjob` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | Le Studio Tech | `le-studio-tech` | `OPERATIONAL` | `SCRAPING_HTTP` |
 | Meteojob | `meteojob` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
-| Michael Page | `michael-page` | `UNDER_REVIEW` | — |
+| Michael Page | `michael-page` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 | France Travail | `france-travail` | `OPERATIONAL` | `API` |
 | LesJeudis | `lesjeudis` | `EMAIL_OR_EXTENSION_ONLY` | `GMAIL`, `EXTENSION` |
 <!-- connector-roadmap:end -->
