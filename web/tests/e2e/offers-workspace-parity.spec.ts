@@ -50,7 +50,7 @@ test('Offers workspace covers preparation, review, manual submission tracking an
   const jobHeading = page.getByRole('heading', { name: jobTitle, level: 3, exact: true });
   await expect(jobHeading).toBeVisible();
   const jobRow = page.getByRole('listitem').filter({ has: jobHeading });
-  await expect(jobRow.getByText('Candidature')).toBeVisible();
+  await expect(jobRow.getByText('Candidature', { exact: true })).toBeVisible();
   await expect(jobRow.getByText('CV prêt')).toBeVisible();
   await expect(jobRow.getByText('Message prêt')).toBeVisible();
   await expect(jobRow.getByText('Lettre prête')).toBeVisible();
