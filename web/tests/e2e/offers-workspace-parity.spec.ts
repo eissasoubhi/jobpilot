@@ -29,7 +29,7 @@ test('Offers workspace covers preparation, review, manual submission tracking an
     mimeType: 'application/pdf',
     buffer: Buffer.from('%PDF-1.4\n% JobPilot Offers parity CV\n'),
   });
-  await page.getByRole('button', { name: 'Ajouter le CV' }).click();
+  await page.getByRole('button', { name: 'Téléverser' }).click();
   await expect(page.getByText(cvName, { exact: true })).toBeVisible();
 
   const createdOffer = await page.request.post('/api/job-offers', {
