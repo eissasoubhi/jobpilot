@@ -26,7 +26,6 @@ const navigation: readonly NavigationGroup[] = [
       ['/', 'Tableau de bord', '⌂'],
       ['/offres', 'Offres', '◎'],
       ['/offres/review', 'Review Queue', '▶'],
-      ['/candidatures', 'Candidatures', '✓'],
     ],
   },
   {
