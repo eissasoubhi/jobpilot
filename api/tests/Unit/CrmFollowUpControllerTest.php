@@ -9,7 +9,11 @@ use App\Crm\Application\OrganizationCrmDirectoryBuilder;
 use App\Entity\Application;
 use App\Entity\CrmFollowUpTask;
 use App\Entity\InboxMessage;
+use App\Entity\JobOffer;
+use App\Entity\JobTimelineEvent;
 use App\Entity\Positioning;
+use App\Timeline\JobTimelineEventType;
+use App\Timeline\JobTimelineRecorder;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -42,6 +46,7 @@ final class CrmFollowUpControllerTest extends TestCase
             static fn (object $entity): bool => $entity instanceof CrmFollowUpTask
                 && $entity->getOrganizationKey() === 'acme consulting'
                 && $entity->getContactKey() === 'jane@acme.test'
+                && $entity->getJobOffer() === null
                 && $entity->getTitle() === 'Relancer Jane'
                 && $entity->getDueAt()->format('Y-m-d') === '2026-08-12',
         ));
@@ -58,7 +63,42 @@ final class CrmFollowUpControllerTest extends TestCase
         self::assertSame(Response::HTTP_CREATED, $response->getStatusCode());
         $payload = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
         self::assertSame('Relancer Jane', $payload['title']);
+        self::assertNull($payload['jobOfferId']);
         self::assertFalse($payload['completed']);
+    }
+
+    public function testCompletingOfferLinkedFollowUpRecordsTimelineEventOnce(): void
+    {
+        $jobOffer = new JobOffer();
+        (new \ReflectionProperty(JobOffer::class, 'id'))->setValue($jobOffer, 42);
+        $task = new CrmFollowUpTask(
+            'acme consulting',
+            null,
+            'Relancer pour la mission',
+            null,
+            new \DateTimeImmutable('2026-09-18'),
+            $jobOffer,
+        );
+        (new \ReflectionProperty(CrmFollowUpTask::class, 'id'))->setValue($task, 7);
+
+        $followUps = $this->repository();
+        $followUps->method('find')->with(7)->willReturn($task);
+        $em = $this->createMock(EntityManagerInterface::class);
+        $em->method('getRepository')->with(CrmFollowUpTask::class)->willReturn($followUps);
+        $em->expects(self::once())->method('persist')->with(self::callback(
+            static fn (object $entity): bool => $entity instanceof JobTimelineEvent
+                && $entity->getJobOffer() === $jobOffer
+                && $entity->getType() === JobTimelineEventType::FOLLOW_UP
+                && $entity->getSource() === 'crm'
+                && $entity->getPayload() === ['crmFollowUpTaskId' => 7],
+        ));
+        $em->expects(self::once())->method('flush');
+
+        $controller = new CrmFollowUpController($em, new OrganizationCrmDirectoryBuilder(), new JobTimelineRecorder($em));
+        $request = Request::create('/api/crm/follow-ups/7', 'PATCH', server: ['CONTENT_TYPE' => 'application/json'], content: '{"completed":true}');
+
+        self::assertSame(Response::HTTP_OK, $controller->updateCompletion(7, $request)->getStatusCode());
+        self::assertTrue($task->isCompleted());
     }
 
     public function testRejectsUnknownContactAndInvalidDate(): void
