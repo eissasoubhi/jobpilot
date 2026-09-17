@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity]
 #[ORM\Table(name: 'crm_follow_up_task')]
 #[ORM\Index(name: 'idx_crm_follow_up_due_status', columns: ['due_at', 'completed_at'])]
+#[ORM\Index(name: 'idx_crm_follow_up_job_offer', columns: ['job_offer_id'])]
 final class CrmFollowUpTask
 {
     #[ORM\Id]
@@ -21,6 +22,10 @@ final class CrmFollowUpTask
 
     #[ORM\Column(name: 'contact_key', length: 255, nullable: true)]
     private ?string $contactKey;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(name: 'job_offer_id', nullable: true, onDelete: 'SET NULL')]
+    private ?JobOffer $jobOffer;
 
     #[ORM\Column(length: 180)]
     private string $title;
@@ -46,9 +51,11 @@ final class CrmFollowUpTask
         mixed $title,
         mixed $note,
         \DateTimeImmutable $dueAt,
+        ?JobOffer $jobOffer = null,
     ) {
         $this->organizationKey = $this->validateKey($organizationKey, 191, 'organization');
         $this->contactKey = $contactKey === null ? null : $this->validateKey($contactKey, 255, 'contact');
+        $this->jobOffer = $jobOffer;
         $this->title = $this->validateTitle($title);
         $this->note = $this->validateNote($note);
         $this->dueAt = $dueAt->setTime(0, 0);
@@ -59,6 +66,7 @@ final class CrmFollowUpTask
     public function getId(): ?int { return $this->id; }
     public function getOrganizationKey(): string { return $this->organizationKey; }
     public function getContactKey(): ?string { return $this->contactKey; }
+    public function getJobOffer(): ?JobOffer { return $this->jobOffer; }
     public function getTitle(): string { return $this->title; }
     public function getNote(): ?string { return $this->note; }
     public function getDueAt(): \DateTimeImmutable { return $this->dueAt; }
@@ -80,6 +88,7 @@ final class CrmFollowUpTask
             'id' => $this->id,
             'organizationKey' => $this->organizationKey,
             'contactKey' => $this->contactKey,
+            'jobOfferId' => $this->jobOffer?->getId(),
             'title' => $this->title,
             'note' => $this->note,
             'dueAt' => $this->dueAt->format('Y-m-d'),
