@@ -8,7 +8,10 @@ use App\Crm\Application\OrganizationCrmDirectoryBuilder;
 use App\Entity\Application;
 use App\Entity\CrmFollowUpTask;
 use App\Entity\InboxMessage;
+use App\Entity\JobOffer;
 use App\Entity\Positioning;
+use App\Timeline\JobTimelineEventType;
+use App\Timeline\JobTimelineRecorder;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,6 +24,7 @@ final class CrmFollowUpController
     public function __construct(
         private EntityManagerInterface $entityManager,
         private OrganizationCrmDirectoryBuilder $directoryBuilder,
+        private JobTimelineRecorder $timeline,
     ) {
     }
 
@@ -69,12 +73,21 @@ final class CrmFollowUpController
                 );
             }
 
+            $jobOffer = $this->resolveJobOffer($organizationKey, $payload['jobOfferId'] ?? null);
+            if (($payload['jobOfferId'] ?? null) !== null && !$jobOffer instanceof JobOffer) {
+                return new JsonResponse(
+                    ['error' => 'CRM follow-up offer was not found in this organization.'],
+                    Response::HTTP_NOT_FOUND,
+                );
+            }
+
             $task = new CrmFollowUpTask(
                 $organizationKey,
                 $contactKey,
                 $payload['title'] ?? null,
                 $payload['note'] ?? null,
                 $this->dueDate($payload['dueAt'] ?? null),
+                $jobOffer,
             );
         } catch (\InvalidArgumentException $exception) {
             return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -106,7 +119,17 @@ final class CrmFollowUpController
             return new JsonResponse(['error' => 'The completed boolean field is required.'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
+        $wasCompleted = $task->isCompleted();
         $task->setCompleted($payload['completed']);
+        if (!$wasCompleted && $task->isCompleted() && $task->getJobOffer() instanceof JobOffer) {
+            $this->timeline->record(
+                $task->getJobOffer(),
+                JobTimelineEventType::FOLLOW_UP,
+                ['crmFollowUpTaskId' => $task->getId()],
+                occurredAt: $task->getCompletedAt(),
+                source: 'crm',
+            );
+        }
         $this->entityManager->flush();
 
         return new JsonResponse($task->toArray());
@@ -146,6 +169,41 @@ final class CrmFollowUpController
         }
 
         return false;
+    }
+
+    private function resolveJobOffer(string $organizationKey, mixed $jobOfferId): ?JobOffer
+    {
+        if ($jobOfferId === null || $jobOfferId === '') {
+            return null;
+        }
+        if (!is_int($jobOfferId) && !(is_string($jobOfferId) && ctype_digit($jobOfferId))) {
+            throw new \InvalidArgumentException('Follow-up jobOfferId must be a positive integer.');
+        }
+
+        $jobOfferId = (int) $jobOfferId;
+        if ($jobOfferId <= 0) {
+            throw new \InvalidArgumentException('Follow-up jobOfferId must be a positive integer.');
+        }
+
+        $belongsToOrganization = false;
+        foreach ($this->baseDirectory()['organizations'] ?? [] as $organization) {
+            if (($organization['key'] ?? null) !== $organizationKey) {
+                continue;
+            }
+            foreach ($organization['recentOffers'] ?? [] as $offer) {
+                if (($offer['id'] ?? null) === $jobOfferId) {
+                    $belongsToOrganization = true;
+                    break 2;
+                }
+            }
+        }
+        if (!$belongsToOrganization) {
+            return null;
+        }
+
+        $jobOffer = $this->entityManager->getRepository(JobOffer::class)->find($jobOfferId);
+
+        return $jobOffer instanceof JobOffer ? $jobOffer : null;
     }
 
     private function optionalKey(mixed $value): ?string
