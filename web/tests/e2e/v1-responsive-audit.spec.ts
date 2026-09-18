@@ -3,7 +3,6 @@ import { expect, test, type Page } from '@playwright/test';
 const routes = [
   ['/offres/review', 'Review Queue'],
   ['/offres', 'Offres'],
-  ['/candidatures', 'Candidatures'],
   ['/crm', 'CRM'],
   ['/messages', 'Messagerie'],
   ['/reporting', 'Reporting candidatures'],
@@ -38,6 +37,15 @@ test.describe('V1 responsive contract', () => {
       }
     });
   }
+
+  test('legacy Candidatures route redirects to the responsive Offers workspace', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/candidatures');
+
+    await expect(page).toHaveURL(/\/offres$/);
+    await expect(page.getByRole('heading', { name: 'Offres', level: 1 })).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+  });
 
   test('mobile connectors keeps the primary refresh action keyboard and touch usable', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
