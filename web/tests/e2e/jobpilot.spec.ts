@@ -20,7 +20,6 @@ test('all main pages load without browser or server errors', async ({ page }) =>
     ['/', 'Tableau de bord'],
     ['/offres', 'Offres'],
     ['/connecteurs', 'Connecteurs'],
-    ['/candidatures', 'Candidatures'],
     ['/positionnements', 'Positionnements'],
     ['/messages', 'Messagerie'],
     ['/cv', 'Mes CV'],
@@ -45,10 +44,14 @@ test('all main pages load without browser or server errors', async ({ page }) =>
     }
   }
 
+  await page.goto('/candidatures');
+  await expect(page).toHaveURL(/\/offres$/);
+  await expect(page.getByRole('heading', { name: 'Offres', level: 1 })).toBeVisible();
+
   expect(failures).toEqual([]);
 });
 
-test('profile, CV, job preparation, source filtering, guided submission and positioning workflow', async ({ page }, testInfo) => {
+test('profile, CV, job preparation, source filtering, Offers consolidation and positioning workflow', async ({ page }, testInfo) => {
   const failures = watchForBrowserFailures(page);
   const uniqueSuffix = `${testInfo.workerIndex}-${Date.now()}-${testInfo.retry}`;
   const cvName = `CV Symfony React FR ${uniqueSuffix}`;
@@ -122,37 +125,9 @@ test('profile, CV, job preparation, source filtering, guided submission and posi
   await expect(jobHeading).toBeVisible();
 
   await page.goto('/candidatures');
-  const applicationHeading = page.getByRole('heading', { name: jobTitle, level: 3, exact: true });
-  await expect(applicationHeading).toBeVisible();
-  const applicationRow = page.getByRole('listitem').filter({ has: applicationHeading });
-  await applicationRow.getByRole('button', { name: 'Examiner et postuler' }).click();
-
-  const applicationDialog = page.getByRole('dialog', { name: `Candidature ${jobTitle}` });
-  await expect(applicationDialog).toBeVisible();
-  await expect(applicationDialog.getByText('JobPilot n’envoie pas automatiquement la candidature.', { exact: true })).toBeVisible();
-  await expect(applicationDialog.getByText('Offre concernée', { exact: true })).toBeVisible();
-  await expect(applicationDialog.getByRole('heading', { name: jobTitle, level: 2, exact: true })).toBeVisible();
-  await expect(applicationDialog.getByText('Example Company', { exact: true })).toBeVisible();
-  await expect(applicationDialog.getByText('Freelance', { exact: true })).toBeVisible();
-  await expect(applicationDialog.getByText('Paris', { exact: true })).toBeVisible();
-  await expect(applicationDialog.getByRole('link', { name: 'Étape 2 — Ouvrir la plateforme pour postuler' })).toHaveAttribute('href', sourceUrl);
-  const descriptionDetails = applicationDialog.locator('details').filter({
-    hasText: 'Afficher la description complète de l’offre',
-  });
-  await descriptionDetails.locator('summary').click();
-  await expect(descriptionDetails.locator('div.small')).toContainText('API Platform');
-
-  await applicationDialog.getByLabel('Confirmation / référence obtenue après l’envoi').fill(`CONF-${uniqueSuffix}`);
-  await applicationDialog.getByRole('button', { name: 'Étape 1 — Enregistrer mes modifications' }).click();
-  await expect(applicationDialog.getByText('Modifications enregistrées. Tu peux maintenant postuler sur la plateforme d’origine.')).toBeVisible();
-
-  page.once('dialog', async (confirmation) => {
-    expect(confirmation.message()).toContain('JobPilot va enregistrer le suivi');
-    await confirmation.accept();
-  });
-  await applicationDialog.getByRole('button', { name: 'Étape 3 — J’ai envoyé la candidature' }).click();
-  await expect(applicationDialog.getByText(/Candidature marquée comme envoyée/)).toBeVisible();
-  await expect(applicationDialog.getByRole('button', { name: 'Candidature déjà marquée comme envoyée' })).toBeDisabled();
+  await expect(page).toHaveURL(/\/offres$/);
+  await expect(page.getByRole('heading', { name: 'Offres', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: jobTitle, level: 3, exact: true })).toBeVisible();
 
   await page.goto('/positionnements');
   await page.getByRole('button', { name: 'Nouveau positionnement' }).click();
