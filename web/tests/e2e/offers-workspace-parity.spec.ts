@@ -74,14 +74,25 @@ test('Offers workspace covers preparation, review, manual submission tracking an
   await expect(reviewDialog.getByRole('status')).toContainText('Modifications enregistrées');
 
   await reviewDialog.getByRole('button', { name: 'J’ai envoyé la candidature' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(offerCard).toHaveCount(0);
+
+  await page.getByRole('radio', { name: 'Envoyées' }).click();
+  const submittedOfferCard = page.getByRole('listitem').filter({ hasText: jobTitle });
+  await expect(submittedOfferCard).toBeVisible();
+  await submittedOfferCard.getByRole('button', { name: 'Examiner' }).click();
+
   reviewDialog = page.getByRole('dialog');
-  await expect(reviewDialog.getByText('SUBMITTED', { exact: true })).toBeVisible();
+  await expect(reviewDialog).toBeVisible();
   await expect(reviewDialog.getByRole('button', { name: 'Annuler la dernière décision' })).toBeVisible();
 
   await reviewDialog.getByRole('button', { name: 'Annuler la dernière décision' }).click();
-  reviewDialog = page.getByRole('dialog');
-  await expect(reviewDialog.getByText('REVIEW', { exact: true })).toBeVisible();
-  await expect(reviewDialog.getByRole('button', { name: 'Annuler la dernière décision' })).toHaveCount(0);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(submittedOfferCard).toHaveCount(0);
+
+  await page.getByRole('radio', { name: 'À traiter' }).click();
+  const restoredOfferCard = page.getByRole('listitem').filter({ hasText: jobTitle });
+  await expect(restoredOfferCard).toBeVisible();
 
   expect(failures).toEqual([]);
 });
