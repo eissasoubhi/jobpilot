@@ -71,16 +71,16 @@ test('Offers workspace covers preparation, review, manual submission tracking an
   const messageField = reviewDialog.getByLabel('Message préparé');
   await messageField.fill(`Message Offers parity ${uniqueSuffix}`);
   await reviewDialog.getByRole('button', { name: 'Enregistrer les modifications' }).click();
-  await expect(page.getByRole('status')).toContainText('Modifications enregistrées');
+  await expect(reviewDialog.getByRole('status')).toContainText('Modifications enregistrées');
 
   await reviewDialog.getByRole('button', { name: 'J’ai envoyé la candidature' }).click();
-  await expect(page.getByRole('status')).toContainText('Candidature marquée comme envoyée');
+  await expect(reviewDialog.getByRole('status')).toContainText('Candidature marquée comme envoyée');
   reviewDialog = page.getByRole('dialog');
   await expect(reviewDialog.getByText('SUBMITTED', { exact: true })).toBeVisible();
   await expect(reviewDialog.getByRole('button', { name: 'Annuler la dernière décision' })).toBeVisible();
 
   await reviewDialog.getByRole('button', { name: 'Annuler la dernière décision' }).click();
-  await expect(page.getByRole('status')).toContainText('Dernière décision annulée');
+  await expect(reviewDialog.getByRole('status')).toContainText('Dernière décision annulée');
   reviewDialog = page.getByRole('dialog');
   await expect(reviewDialog.getByText('REVIEW', { exact: true })).toBeVisible();
   await expect(reviewDialog.getByRole('button', { name: 'Annuler la dernière décision' })).toHaveCount(0);
