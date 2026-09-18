@@ -51,11 +51,12 @@ test('Offers workspace covers preparation, review, manual submission tracking an
   const offerCard = page.getByRole('listitem').filter({ hasText: jobTitle });
   await expect(offerCard).toBeVisible();
 
-  await expect(offerCard.getByText('Candidature', { exact: true })).toBeVisible();
-  await expect(offerCard.getByText(cvName, { exact: true })).toBeVisible();
-  await expect(offerCard.getByText('Message préparé')).toBeVisible();
-  await expect(offerCard.getByText('Lettre de motivation demandée')).toBeVisible();
-  await expect(offerCard.getByText('500 € HT/jour')).toBeVisible();
+  const preparedApplication = offerCard.getByRole('region', { name: `Candidature préparée pour ${jobTitle}` });
+  await expect(preparedApplication.getByText('Candidature', { exact: true })).toBeVisible();
+  await expect(preparedApplication.getByText(cvName, { exact: true })).toBeVisible();
+  await expect(preparedApplication.getByText('Message préparé')).toBeVisible();
+  await expect(preparedApplication.getByText('Lettre de motivation demandée')).toBeVisible();
+  await expect(preparedApplication.getByText('500 € HT/jour')).toBeVisible();
 
   await offerCard.getByRole('button', { name: 'Examiner' }).click();
   let reviewDialog = page.getByRole('dialog');
