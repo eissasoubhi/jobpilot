@@ -74,13 +74,13 @@ test('Offers workspace covers preparation, review, manual submission tracking an
   await expect(reviewDialog.getByRole('status')).toContainText('Modifications enregistrées');
 
   await reviewDialog.getByRole('button', { name: 'J’ai envoyé la candidature' }).click();
-  await expect(reviewDialog.getByRole('status')).toContainText('Candidature marquée comme envoyée');
+  await expect(page.getByRole('status').filter({ hasText: 'Candidature marquée comme envoyée' })).toBeVisible();
   reviewDialog = page.getByRole('dialog');
   await expect(reviewDialog.getByText('SUBMITTED', { exact: true })).toBeVisible();
   await expect(reviewDialog.getByRole('button', { name: 'Annuler la dernière décision' })).toBeVisible();
 
   await reviewDialog.getByRole('button', { name: 'Annuler la dernière décision' }).click();
-  await expect(reviewDialog.getByRole('status')).toContainText('Dernière décision annulée');
+  await expect(page.getByRole('status').filter({ hasText: 'Dernière décision annulée' })).toBeVisible();
   reviewDialog = page.getByRole('dialog');
   await expect(reviewDialog.getByText('REVIEW', { exact: true })).toBeVisible();
   await expect(reviewDialog.getByRole('button', { name: 'Annuler la dernière décision' })).toHaveCount(0);
