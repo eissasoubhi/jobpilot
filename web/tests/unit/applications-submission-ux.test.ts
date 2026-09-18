@@ -4,11 +4,17 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 describe('application submission tracking UX', () => {
-  it('marks an application as submitted without a browser confirmation dialog', () => {
-    const pageSource = readFileSync(resolve(process.cwd(), 'app/candidatures/page.tsx'), 'utf8');
+  it('keeps submission tracking in the unified Offers workspace without a browser confirmation dialog', () => {
+    const summarySource = readFileSync(
+      resolve(process.cwd(), 'components/OfferApplicationSummary.tsx'),
+      'utf8',
+    );
+    const legacyPageSource = readFileSync(resolve(process.cwd(), 'app/candidatures/page.tsx'), 'utf8');
 
-    expect(pageSource).not.toContain('window.confirm');
-    expect(pageSource).toContain("await save(\n      'SUBMITTED'");
-    expect(pageSource).toContain('met immédiatement à jour le suivi dans JobPilot sans ouvrir de confirmation');
+    expect(summarySource).not.toContain('window.confirm');
+    expect(summarySource).toContain("saveApplication('SUBMITTED'");
+    expect(summarySource).toContain('J’ai envoyé la candidature');
+    expect(summarySource).toContain('/review-decision/undo');
+    expect(legacyPageSource).toContain("redirect('/offres')");
   });
 });
