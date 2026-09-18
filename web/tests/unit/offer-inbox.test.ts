@@ -31,9 +31,10 @@ function application(status: string): Application {
 }
 
 describe('matchesOfferInboxView', () => {
-  it('keeps submitted and explicitly ignored applications out of the actionable inbox', () => {
+  it('keeps submitted, ignored and archived applications out of the actionable inbox', () => {
     expect(matchesOfferInboxView(application('SUBMITTED'), 'actionable')).toBe(false);
     expect(matchesOfferInboxView(application('IGNORED_NOT_MATCH'), 'actionable')).toBe(false);
+    expect(matchesOfferInboxView(application('ARCHIVED'), 'actionable')).toBe(false);
     expect(matchesOfferInboxView(application('READY_TO_SUBMIT'), 'actionable')).toBe(true);
     expect(matchesOfferInboxView(undefined, 'actionable')).toBe(true);
   });
@@ -48,7 +49,16 @@ describe('matchesOfferInboxView', () => {
   it('shows only explicitly ignored applications in the ignored view', () => {
     expect(matchesOfferInboxView(application('IGNORED_NOT_MATCH'), 'ignored')).toBe(true);
     expect(matchesOfferInboxView(application('SUBMITTED'), 'ignored')).toBe(false);
+    expect(matchesOfferInboxView(application('ARCHIVED'), 'ignored')).toBe(false);
     expect(matchesOfferInboxView(application('READY_TO_SUBMIT'), 'ignored')).toBe(false);
     expect(matchesOfferInboxView(undefined, 'ignored')).toBe(false);
+  });
+
+  it('keeps archived applications in a dedicated recoverable view', () => {
+    expect(matchesOfferInboxView(application('ARCHIVED'), 'archived')).toBe(true);
+    expect(matchesOfferInboxView(application('IGNORED_NOT_MATCH'), 'archived')).toBe(false);
+    expect(matchesOfferInboxView(application('SUBMITTED'), 'archived')).toBe(false);
+    expect(matchesOfferInboxView(application('READY_TO_SUBMIT'), 'archived')).toBe(false);
+    expect(matchesOfferInboxView(undefined, 'archived')).toBe(false);
   });
 });
