@@ -84,9 +84,9 @@ test('Offers workspace covers preparation, review, manual submission tracking an
 
   reviewDialog = page.getByRole('dialog');
   await expect(reviewDialog).toBeVisible();
-  await expect(reviewDialog.getByRole('button', { name: 'Annuler la dernière décision' })).toBeVisible();
+  await expect(reviewDialog.getByRole('button', { name: 'Annuler la décision' })).toBeVisible();
 
-  await reviewDialog.getByRole('button', { name: 'Annuler la dernière décision' }).click();
+  await reviewDialog.getByRole('button', { name: 'Annuler la décision' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(submittedOfferCard).toHaveCount(0);
 
