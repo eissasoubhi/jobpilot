@@ -50,7 +50,7 @@ test('Offers workspace covers preparation, review, manual submission tracking an
 
   const offerCard = page.getByRole('listitem').filter({ hasText: jobTitle });
   await expect(offerCard).toBeVisible();
-  await expect(offerCard.getByText(`CV conseillé :`).locator('..').getByText(cvName, { exact: true })).toBeVisible();
+  await expect(offerCard.getByRole('strong').filter({ hasText: cvName })).toBeVisible();
 
   const preparedApplication = offerCard.getByRole('region', { name: `Candidature préparée pour ${jobTitle}` });
   await expect(preparedApplication.getByText('Candidature', { exact: true })).toBeVisible();
