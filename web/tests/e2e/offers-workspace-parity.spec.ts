@@ -48,7 +48,7 @@ test('Offers workspace covers preparation, review, manual submission tracking an
     .fill('Mission Symfony senior avec API Platform. Une lettre de motivation est demandée. Merci de préciser vos prétentions salariales.');
   await addDialog.getByRole('button', { name: 'Analyser et enregistrer' }).click();
 
-  const offerCard = page.locator('article').filter({ hasText: jobTitle });
+  const offerCard = page.getByRole('listitem').filter({ hasText: jobTitle });
   await expect(offerCard).toBeVisible();
 
   await expect(offerCard.getByText('Candidature', { exact: true })).toBeVisible();
