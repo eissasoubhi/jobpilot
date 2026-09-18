@@ -63,12 +63,12 @@ test('Offers workspace covers preparation, review, manual submission tracking an
   let reviewDialog = page.getByRole('dialog');
   await expect(reviewDialog).toBeVisible();
   await expect(reviewDialog.getByRole('heading', { name: jobTitle })).toBeVisible();
-  await expect(reviewDialog.getByText('Message de candidature')).toBeVisible();
-  await expect(reviewDialog.getByText('Lettre de motivation')).toBeVisible();
-  await expect(reviewDialog.getByText('500 € HT/jour')).toBeVisible();
+  await expect(reviewDialog.getByLabel('Message préparé')).toBeVisible();
+  await expect(reviewDialog.getByLabel('Lettre de motivation demandée')).toBeVisible();
+  await expect(reviewDialog.getByLabel('Réponse rémunération')).toHaveValue('500 € HT/jour');
   await expect(reviewDialog.getByRole('link', { name: 'Ouvrir la plateforme pour postuler' })).toHaveAttribute('href', sourceUrl);
 
-  const messageField = reviewDialog.getByLabel('Message de candidature');
+  const messageField = reviewDialog.getByLabel('Message préparé');
   await messageField.fill(`Message Offers parity ${uniqueSuffix}`);
   await reviewDialog.getByRole('button', { name: 'Enregistrer les modifications' }).click();
   await expect(page.getByRole('status')).toContainText('Modifications enregistrées');
