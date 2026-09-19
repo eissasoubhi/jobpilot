@@ -24,6 +24,14 @@ final class ApplicationPreparationService
     public function prepare(JobOffer $job, CandidateProfile $profile): Application
     {
         $existing = $this->em->getRepository(Application::class)->findOneBy(['jobOffer' => $job]);
+
+        // Archiving is an explicit local triage decision. Background processing and
+        // repeated preparation must never silently put the offer back in the inbox;
+        // the user has to restore it explicitly through the safe Undo flow first.
+        if ($existing?->getStatus() === 'ARCHIVED') {
+            return $existing;
+        }
+
         $application = $existing ?? new Application($job);
         $profileSkills = $this->data?->settings()->getSkills() ?? [];
         $content = $this->contentBuilder->build($job, $profile, $profileSkills);
