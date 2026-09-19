@@ -29,6 +29,17 @@ final class ReviewDecisionUndoServiceTest extends TestCase
         self::assertNull($application->getSubmittedAt());
     }
 
+    public function testUndoArchivedDecisionRestoresReadyState(): void
+    {
+        $application = $this->application('ARCHIVED');
+
+        $previous = $this->service->undo($application);
+
+        self::assertSame('ARCHIVED', $previous);
+        self::assertSame('READY_TO_SUBMIT', $application->getStatus());
+        self::assertNull($application->getSubmittedAt());
+    }
+
     public function testUndoUnavailableRestoresPreparedJobAndReadyApplication(): void
     {
         $application = $this->application('OFFER_UNAVAILABLE');
