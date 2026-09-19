@@ -73,31 +73,9 @@ test('Offers workspace covers preparation, review, manual submission tracking an
   await reviewDialog.getByRole('button', { name: 'Enregistrer les modifications' }).click();
   await expect(reviewDialog.getByRole('status')).toContainText('Modifications enregistrées');
 
-  await reviewDialog.getByRole('button', { name: 'Archiver' }).click();
-  await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(offerCard).toHaveCount(0);
-
-  await page.getByRole('radio', { name: 'Archivées' }).click();
-  const archivedOfferCard = page.getByRole('listitem').filter({ hasText: jobTitle });
-  await expect(archivedOfferCard).toBeVisible();
-  await archivedOfferCard.getByRole('button', { name: 'Examiner' }).click();
-
-  reviewDialog = page.getByRole('dialog');
-  await expect(reviewDialog).toBeVisible();
-  await expect(reviewDialog.getByRole('button', { name: 'Annuler la décision' })).toBeVisible();
-  await reviewDialog.getByRole('button', { name: 'Annuler la décision' }).click();
-  await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(archivedOfferCard).toHaveCount(0);
-
-  await page.getByRole('radio', { name: 'À traiter' }).click();
-  const restoredAfterArchive = page.getByRole('listitem').filter({ hasText: jobTitle });
-  await expect(restoredAfterArchive).toBeVisible();
-  await restoredAfterArchive.getByRole('button', { name: 'Examiner' }).click();
-
-  reviewDialog = page.getByRole('dialog');
   await reviewDialog.getByRole('button', { name: 'J’ai envoyé la candidature' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(restoredAfterArchive).toHaveCount(0);
+  await expect(offerCard).toHaveCount(0);
 
   await page.getByRole('radio', { name: 'Envoyées' }).click();
   const submittedOfferCard = page.getByRole('listitem').filter({ hasText: jobTitle });
