@@ -457,6 +457,7 @@ export default function JobsPage() {
               { value: 'actionable', label: 'À traiter' },
               { value: 'submitted', label: 'Envoyées' },
               { value: 'ignored', label: 'Ignorées' },
+              { value: 'archived', label: 'Archivées' },
             ] as const}
           />
 
@@ -558,24 +559,29 @@ export default function JobsPage() {
 
       {show && (
         <Modal ariaLabel="Ajouter une offre" onClose={() => setShow(false)}>
-          <PageHeader title="Ajouter une offre" actions={<Button variant="secondary" onClick={() => setShow(false)}>Fermer</Button>} />
-          <form className="form-grid" onSubmit={(event) => void submit(event)}>
-            <label>Source<input value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} /></label>
-            <label>URL<input value={form.sourceUrl} onChange={(e) => setForm({ ...form, sourceUrl: e.target.value })} /></label>
-            <label>Intitulé<input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></label>
-            <label>Entreprise<input value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} /></label>
-            <label>Client final éventuel<input value={form.clientName} onChange={(e) => setForm({ ...form, clientName: e.target.value })} /></label>
-            <label>Lieu<input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></label>
-            <label>Contrat<select value={form.contractType} onChange={(e) => setForm({ ...form, contractType: e.target.value })}><option>CDI</option><option>CDD</option><option>Freelance</option><option>Portage salarial</option><option>Sous-traitance</option></select></label>
-            <label>Mode de travail<input value={form.workMode} onChange={(e) => setForm({ ...form, workMode: e.target.value })} /></label>
-            <label>Date de publication<input type="datetime-local" value={form.publishedAt} onChange={(e) => setForm({ ...form, publishedAt: e.target.value })} /></label>
-            <label>Salaire min. annuel<input type="number" value={form.salaryMin} onChange={(e) => setForm({ ...form, salaryMin: e.target.value })} /></label>
-            <label>Salaire max. annuel<input type="number" value={form.salaryMax} onChange={(e) => setForm({ ...form, salaryMax: e.target.value })} /></label>
-            <label>TJM fixe<input type="number" value={form.tjmFixed} onChange={(e) => setForm({ ...form, tjmFixed: e.target.value })} /></label>
-            <label>TJM minimum<input type="number" value={form.tjmMin} onChange={(e) => setForm({ ...form, tjmMin: e.target.value })} /></label>
-            <label>TJM maximum<input type="number" value={form.tjmMax} onChange={(e) => setForm({ ...form, tjmMax: e.target.value })} /></label>
-            <label className="full">Description<textarea required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
-            <Button className="full" type="submit">Analyser et enregistrer</Button>
+          <form onSubmit={submit}>
+            <h2>Ajouter une offre</h2>
+            <div className="form-grid">
+              <FormField label="Source"><input value={form.source} onChange={(event) => setForm({ ...form, source: event.target.value })} /></FormField>
+              <FormField label="URL"><input value={form.sourceUrl} onChange={(event) => setForm({ ...form, sourceUrl: event.target.value })} /></FormField>
+              <FormField label="Intitulé"><input required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></FormField>
+              <FormField label="Entreprise"><input value={form.company} onChange={(event) => setForm({ ...form, company: event.target.value })} /></FormField>
+              <FormField label="Client final"><input value={form.clientName} onChange={(event) => setForm({ ...form, clientName: event.target.value })} /></FormField>
+              <FormField label="Lieu"><input value={form.location} onChange={(event) => setForm({ ...form, location: event.target.value })} /></FormField>
+              <FormField label="Contrat"><select value={form.contractType} onChange={(event) => setForm({ ...form, contractType: event.target.value })}><option>CDI</option><option>Freelance</option><option>CDD</option></select></FormField>
+              <FormField label="Mode de travail"><select value={form.workMode} onChange={(event) => setForm({ ...form, workMode: event.target.value })}><option>Remote</option><option>Hybride</option><option>Sur site</option></select></FormField>
+              <FormField label="Date de publication"><input type="datetime-local" value={form.publishedAt} onChange={(event) => setForm({ ...form, publishedAt: event.target.value })} /></FormField>
+              <FormField label="Salaire minimum"><input inputMode="numeric" value={form.salaryMin} onChange={(event) => setForm({ ...form, salaryMin: event.target.value })} /></FormField>
+              <FormField label="Salaire maximum"><input inputMode="numeric" value={form.salaryMax} onChange={(event) => setForm({ ...form, salaryMax: event.target.value })} /></FormField>
+              <FormField label="TJM fixe"><input inputMode="numeric" value={form.tjmFixed} onChange={(event) => setForm({ ...form, tjmFixed: event.target.value })} /></FormField>
+              <FormField label="TJM minimum"><input inputMode="numeric" value={form.tjmMin} onChange={(event) => setForm({ ...form, tjmMin: event.target.value })} /></FormField>
+              <FormField label="TJM maximum"><input inputMode="numeric" value={form.tjmMax} onChange={(event) => setForm({ ...form, tjmMax: event.target.value })} /></FormField>
+              <FormField label="Description"><textarea rows={8} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /></FormField>
+            </div>
+            <div className="actions" style={{ marginTop: 16 }}>
+              <Button type="submit">Analyser et enregistrer</Button>
+              <Button type="button" variant="secondary" onClick={() => setShow(false)}>Annuler</Button>
+            </div>
           </form>
         </Modal>
       )}
