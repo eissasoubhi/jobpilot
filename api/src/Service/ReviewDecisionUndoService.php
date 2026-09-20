@@ -15,7 +15,7 @@ final class ReviewDecisionUndoService
     public function undo(Application $application): string
     {
         $previousStatus = $application->getStatus();
-        if (!in_array($previousStatus, ['IGNORED_NOT_MATCH', 'OFFER_UNAVAILABLE', 'SUBMITTED'], true)) {
+        if (!in_array($previousStatus, ['IGNORED_NOT_MATCH', 'OFFER_UNAVAILABLE', 'SUBMITTED', 'ARCHIVED'], true)) {
             throw new \LogicException('La dernière décision de cette candidature ne peut pas être annulée.');
         }
 

@@ -60,3 +60,15 @@ export const GmailSubmissionWithoutUndo: Story = {
   },
   parameters: { docs: { description: { story: 'Un envoi externe Gmail ne propose jamais d’annulation locale de l’envoi.' } } },
 };
+
+export const ArchivedWithSafeUndo: Story = {
+  name: 'Archive locale — récupérable avec Undo',
+  args: {
+    application: application({
+      id: 45,
+      status: 'ARCHIVED',
+      jobOffer: { ...application().jobOffer, id: 45, title: 'Développeur Full-Stack à revoir plus tard', score: 79 },
+    }),
+  },
+  parameters: { docs: { description: { story: 'Une offre archivée reste une décision locale JobPilot : elle peut être récupérée avec « Annuler la décision » et ne déclenche aucune action externe.' } } },
+};

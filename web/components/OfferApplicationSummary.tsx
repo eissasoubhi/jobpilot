@@ -17,7 +17,7 @@ type OfferApplicationSummaryProps = {
 };
 
 function supportsSafeUndo(application: Application): boolean {
-  if (application.status === 'IGNORED_NOT_MATCH') return true;
+  if (application.status === 'IGNORED_NOT_MATCH' || application.status === 'ARCHIVED') return true;
   return application.status === 'SUBMITTED' && application.gmailMessageId == null;
 }
 
@@ -71,6 +71,9 @@ export function OfferApplicationSummary({ application, onApplicationUpdated }: O
   };
   const markIgnoredNotMatch = async (): Promise<void> => {
     if (currentApplication.status !== 'IGNORED_NOT_MATCH') await saveApplication('IGNORED_NOT_MATCH', 'Offre marquée comme ne correspondant pas au profil.', true);
+  };
+  const markArchived = async (): Promise<void> => {
+    if (currentApplication.status !== 'ARCHIVED') await saveApplication('ARCHIVED', 'Offre archivée dans JobPilot. Elle reste récupérable depuis la vue Archivées.', true);
   };
 
   const undoDecision = async (): Promise<void> => {
@@ -139,14 +142,17 @@ export function OfferApplicationSummary({ application, onApplicationUpdated }: O
           </section>
           <section>
             <strong>Décision</strong>
-            <div className={`small muted ${styles.reviewSectionHint}`}>Si l’offre ne correspond pas à ton profil, marque-la ici. Elle quittera la boîte À traiter sans être supprimée ni envoyer quoi que ce soit à la plateforme.</div>
-            <div className={`actions ${styles.decisionActions}`}><Button variant="secondary" size="small" loading={saving} disabled={currentApplication.status === 'IGNORED_NOT_MATCH'} onClick={() => void markIgnoredNotMatch()}>{currentApplication.status === 'IGNORED_NOT_MATCH' ? 'Déjà marquée comme non correspondante' : 'Ne correspond pas à mon profil'}</Button></div>
+            <div className={`small muted ${styles.reviewSectionHint}`}>Écarte une offre qui ne correspond pas au profil, ou archive-la pour la sortir de la boîte À traiter tout en la gardant récupérable. Ces décisions restent locales à JobPilot.</div>
+            <div className={`actions ${styles.decisionActions}`}>
+              <Button variant="secondary" size="small" loading={saving} disabled={currentApplication.status === 'IGNORED_NOT_MATCH'} onClick={() => void markIgnoredNotMatch()}>{currentApplication.status === 'IGNORED_NOT_MATCH' ? 'Déjà marquée comme non correspondante' : 'Ne correspond pas à mon profil'}</Button>
+              <Button variant="secondary" size="small" loading={saving} disabled={currentApplication.status === 'ARCHIVED'} onClick={() => void markArchived()}>{currentApplication.status === 'ARCHIVED' ? 'Déjà archivée' : 'Archiver'}</Button>
+            </div>
           </section>
           <section>
             <strong>Suivi</strong>
             <div className={`small muted ${styles.reviewSectionHint}`}>Mets à jour ici l’état réel de la candidature. Ces changements servent uniquement au suivi dans JobPilot et ne déclenchent aucun envoi externe.</div>
             <div className={`stack ${styles.trackingStack}`}>
-              <label>Statut de suivi dans JobPilot<select aria-label="Statut de suivi dans JobPilot" value={currentApplication.status} disabled={saving || currentApplication.status === 'SUBMISSION_PENDING'} onChange={(event) => setCurrentApplication({ ...currentApplication, status: event.target.value })}><option value="READY_TO_SUBMIT">Prête à envoyer</option><option value="SUBMISSION_FAILED">Échec de l’envoi automatique</option><option value="SUBMITTED">Envoyée</option><option value="RECRUITER_REPLIED">Réponse recruteur</option><option value="INTERVIEW">Entretien</option><option value="REJECTED">Refusée</option><option value="OFFER_RECEIVED">Offre reçue</option><option value="IGNORED_NOT_MATCH">Ne correspond pas au profil</option></select></label>
+              <label>Statut de suivi dans JobPilot<select aria-label="Statut de suivi dans JobPilot" value={currentApplication.status} disabled={saving || currentApplication.status === 'SUBMISSION_PENDING'} onChange={(event) => setCurrentApplication({ ...currentApplication, status: event.target.value })}><option value="READY_TO_SUBMIT">Prête à envoyer</option><option value="SUBMISSION_FAILED">Échec de l’envoi automatique</option><option value="SUBMITTED">Envoyée</option><option value="RECRUITER_REPLIED">Réponse recruteur</option><option value="INTERVIEW">Entretien</option><option value="REJECTED">Refusée</option><option value="OFFER_RECEIVED">Offre reçue</option><option value="IGNORED_NOT_MATCH">Ne correspond pas au profil</option><option value="ARCHIVED">Archivée</option></select></label>
               <div className="actions"><Button variant="secondary" size="small" loading={saving} disabled={currentApplication.status === 'SUBMISSION_PENDING'} onClick={() => void saveTrackingStatus()}>Enregistrer le statut</Button><Button variant="secondary" size="small" loading={saving} disabled={currentApplication.status === 'SUBMITTED'} onClick={() => void markSubmitted()}>{currentApplication.status === 'SUBMITTED' ? 'Candidature déjà marquée comme envoyée' : 'J’ai envoyé la candidature'}</Button></div>
             </div>
             {(notice !== '' || undoAvailable) && <InlineFeedback tone="success"><span>{notice || 'Cette décision locale peut encore être annulée.'}</span>{undoAvailable && <> <Button variant="secondary" size="small" loading={saving} onClick={() => void undoDecision()}>Annuler la décision</Button></>}</InlineFeedback>}
