@@ -457,6 +457,7 @@ export default function JobsPage() {
               { value: 'actionable', label: 'À traiter' },
               { value: 'submitted', label: 'Envoyées' },
               { value: 'ignored', label: 'Ignorées' },
+              { value: 'archived', label: 'Archivées' },
             ] as const}
           />
 
