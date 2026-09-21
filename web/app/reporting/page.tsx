@@ -7,6 +7,7 @@ import { Badge, Card, DataList, DataListItem, Empty, ErrorBox, InlineFeedback, P
 import { api } from '@/lib/api';
 import { buildApplicationReporting } from '@/lib/application-reporting';
 import { getErrorMessage } from '@/lib/errors';
+import { formatTimelineLatency, timelineLatencyEvidence, type TimelineLatencyReport } from '@/lib/timeline-latency';
 import type { Application } from '@/lib/types';
 
 import styles from './page.module.css';
@@ -60,14 +61,22 @@ function ReportingSkeleton() {
 
 export default function ReportingPage() {
   const [applications, setApplications] = useState<Application[] | null>(null);
+  const [responseLatency, setResponseLatency] = useState<TimelineLatencyReport | null>(null);
+  const [applicationLatency, setApplicationLatency] = useState<TimelineLatencyReport | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
     let active = true;
-    void api<Application[]>('/applications')
-      .then((items) => {
+    void Promise.all([
+      api<Application[]>('/applications'),
+      api<TimelineLatencyReport>('/reporting/response-latency'),
+      api<TimelineLatencyReport>('/reporting/application-latency'),
+    ])
+      .then(([items, responseResult, applicationResult]) => {
         if (!active) return;
         setApplications(items);
+        setResponseLatency(responseResult);
+        setApplicationLatency(applicationResult);
         setError('');
       })
       .catch((caughtError: unknown) => {
@@ -85,13 +94,13 @@ export default function ReportingPage() {
     <>
       <PageHeader
         title="Reporting candidatures"
-        description="Indicateurs locaux calculés uniquement depuis les candidatures déjà enregistrées dans JobPilot."
+        description="Indicateurs locaux calculés uniquement depuis les candidatures et événements métier déjà enregistrés dans JobPilot."
       />
       {error !== '' ? (
         <Card>
           <ErrorBox message={error} />
         </Card>
-      ) : summary === null ? (
+      ) : summary === null || responseLatency === null || applicationLatency === null ? (
         <ReportingSkeleton />
       ) : summary.total === 0 ? (
         <Card><Empty>Aucune candidature n’est disponible pour calculer les indicateurs.</Empty></Card>
@@ -117,6 +126,36 @@ export default function ReportingPage() {
           </div>
 
           <Card>
+            <h2 className="section-title">Délais issus de la timeline</h2>
+            <DataList aria-label="Délais calculés depuis les événements métier">
+              <DataListItem>
+                <div className={styles.sourceRow}>
+                  <div>
+                    <strong className={styles.sourceName}>Découverte → candidature</strong>
+                    <div>{timelineLatencyEvidence(applicationLatency)}</div>
+                  </div>
+                  <div className={styles.badgeCluster}>
+                    <Badge tone="blue">Moyenne {formatTimelineLatency(applicationLatency.averageHours)}</Badge>
+                    <Badge>Médiane {formatTimelineLatency(applicationLatency.medianHours)}</Badge>
+                  </div>
+                </div>
+              </DataListItem>
+              <DataListItem>
+                <div className={styles.sourceRow}>
+                  <div>
+                    <strong className={styles.sourceName}>Candidature → première réponse</strong>
+                    <div>{timelineLatencyEvidence(responseLatency)}</div>
+                  </div>
+                  <div className={styles.badgeCluster}>
+                    <Badge tone="blue">Moyenne {formatTimelineLatency(responseLatency.averageHours)}</Badge>
+                    <Badge>Médiane {formatTimelineLatency(responseLatency.medianHours)}</Badge>
+                  </div>
+                </div>
+              </DataListItem>
+            </DataList>
+          </Card>
+
+          <Card>
             <h2 className="section-title">Conversion par source</h2>
             <DataList aria-label="Conversion des candidatures par source">
               {summary.bySource.map((row) => (
@@ -136,7 +175,7 @@ export default function ReportingPage() {
           </Card>
 
           <InlineFeedback tone="warning">
-            Les taux reposent uniquement sur les statuts actuellement stockés. JobPilot ne déduit pas une réponse, un entretien ou un refus qui n’a pas été enregistré.
+            Les conversions reposent sur les statuts enregistrés. Les délais utilisent uniquement la timeline métier horodatée : JobPilot n’invente aucune réponse, candidature ou date manquante.
           </InlineFeedback>
         </div>
       )}
