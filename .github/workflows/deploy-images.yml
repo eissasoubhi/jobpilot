@@ -30,7 +30,7 @@ jobs:
       - name: Validate deployment configuration
         run: docker compose --env-file deploy/.env.example -f deploy/compose.yml config --quiet
       - name: Validate deployment scripts
-        run: sh -n deploy/deploy.sh deploy/backup.sh
+        run: sh -n deploy/deploy.sh deploy/backup.sh deploy/restore.sh
 
   build:
     name: Build ${{ matrix.name }} (${{ matrix.arch }})
