@@ -12,7 +12,8 @@ Copy these files to `/opt/jobpilot` on every server:
 ├── compose.yml
 ├── Caddyfile
 ├── deploy.sh
-└── backup.sh
+├── backup.sh
+└── restore.sh
 ```
 
 Do not clone the application source on the server. Symfony, Next.js, the scheduler code, the browser worker, and the initial bootstrap data are contained in the versioned images.
@@ -22,7 +23,7 @@ Do not clone the application source on the server. Symfony, Next.js, the schedul
 From a checkout of this repository:
 
 ```bash
-scp deploy/compose.yml deploy/Caddyfile deploy/deploy.sh deploy/backup.sh \
+scp deploy/compose.yml deploy/Caddyfile deploy/deploy.sh deploy/backup.sh deploy/restore.sh \
   aissa@VM_IP:/opt/jobpilot/
 ```
 
@@ -30,7 +31,7 @@ On the VM:
 
 ```bash
 cd /opt/jobpilot
-chmod +x deploy.sh backup.sh
+chmod +x deploy.sh backup.sh restore.sh
 chmod 600 .env
 
 docker compose --env-file .env -f compose.yml config --quiet
@@ -87,9 +88,20 @@ cd /opt/jobpilot
 ./backup.sh
 ```
 
-Each backup contains PostgreSQL plus `/app/var/private` (CVs, encrypted integration configuration, Gmail tokens, AI state/cache, and related private state).
+Each backup contains PostgreSQL plus `/app/var/private` (CVs, encrypted integration configuration, Gmail tokens, AI state/cache, and related private state). Backups include checksums and the restore procedure refuses a backup without an integrity manifest.
 
 Backups on the same VM are protection against a bad deployment, not against VM loss. Production should additionally copy them to independent storage.
+
+## Restore
+
+A restore is deliberately destructive and therefore requires an explicit confirmation flag. It validates both archives and their checksums before touching the running state, stops application services, creates a fresh safety backup of the current state, restores PostgreSQL and `/app/var/private`, then restarts the complete stack and waits for health checks.
+
+```bash
+cd /opt/jobpilot
+./restore.sh /opt/jobpilot/backups/<UTC-timestamp> --confirm-restore
+```
+
+Never restore a production backup into development or CI. Before a production restore, copy the selected backup to independent storage when possible and record the deployed SHA, backup timestamp and reason in the incident log. After restore, verify the Offers workspace, Gmail connector status and worker health before resuming normal use.
 
 ## Rollback
 
@@ -99,11 +111,13 @@ To roll the application images back, deploy the previous known-good SHA:
 ./deploy.sh <previous-good-sha>
 ```
 
-This does not automatically reverse database migrations. Schema changes must remain backward-compatible with the previous application image, or the database must be restored deliberately from the pre-migration backup.
+This does not automatically reverse database migrations. Schema changes must remain backward-compatible with the previous application image, or the database must be restored deliberately from the pre-migration backup with `restore.sh`.
+
+For a staging rollback drill, deploy the current SHA, record the healthy state, deploy another known-good SHA, then deploy the previous SHA again and verify the same principal health checks. Do not claim production-readiness evidence until the drill has actually been executed and its exact SHAs/results have been recorded.
 
 ## Oracle production
 
-Use the same five deployment files and the same `deploy.sh` command. Only server-specific `.env` values change. For a public hostname, for example:
+Use the same six deployment files and the same `deploy.sh` command. Only server-specific `.env` values change. For a public hostname, for example:
 
 ```dotenv
 CADDY_SITE_ADDRESS=jobpilot.example.com
