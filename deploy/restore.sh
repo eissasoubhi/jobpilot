@@ -61,9 +61,14 @@ until compose exec -T db pg_isready >/dev/null 2>&1; do
   sleep 2
 done
 
-# Stop application services before replacing database/private state. PostgreSQL stays up.
+# Stop every Compose service except PostgreSQL before replacing database/private state.
+# Deriving the list from Compose prevents restore drift when services are added/renamed.
 echo "Stopping application services..."
-compose stop web api worker scheduler browser-worker caddy 2>/dev/null || true
+APPLICATION_SERVICES=$(compose config --services | awk '$0 != "db"')
+[ -n "$APPLICATION_SERVICES" ] || { echo "No application services found to stop." >&2; exit 1; }
+# Service names cannot contain whitespace, so deliberate word splitting is safe here.
+# shellcheck disable=SC2086
+compose stop $APPLICATION_SERVICES
 
 # Keep an emergency snapshot of the current state before destructive restore.
 echo "Creating pre-restore safety backup..."
