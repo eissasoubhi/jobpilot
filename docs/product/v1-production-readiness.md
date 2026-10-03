@@ -60,3 +60,9 @@ For each item, record the date, environment, exact deployed commit/image digest,
 ## Completion rule
 
 Declare V1 complete only when the V1 exit criteria in `roadmap-v1.md` are satisfied and the remaining production evidence above is captured. Once that is true, stop autonomous V1 work; do not automatically start V2 AI-first ATS or V3 Career OS work.
+
+## Staging evidence automation
+
+The repository now provides the manual `Staging V1 readiness` workflow as the execution harness for the remaining operational evidence. It is intentionally gated by the GitHub `staging` environment, pinned SSH host keys, an explicit `JOBPILOT_DEPLOYMENT_ENV=staging` marker, and opt-in destructive drills.
+
+The workflow can produce artifact-backed evidence for exact-SHA deployment/health, persistence across container replacement, operational backup/restore, rollback plus forward recovery, and JobPilot-side fresh webhook delivery. The automation itself is **not** completion evidence: each item counts only after a real staging run succeeds. Alerting still additionally requires confirmation at the disposable receiver. Never convert a skipped switch, missing secret, CI simulation, or documentation into a PASS in this ledger.
