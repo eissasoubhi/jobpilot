@@ -14,7 +14,8 @@ Copy these files to `/opt/jobpilot` on every server:
 ├── deploy.sh
 ├── backup.sh
 ├── restore.sh
-└── verify-alert-path.sh
+├── verify-alert-path.sh
+└── verify-persistence.sh
 ```
 
 Do not clone the application source on the server. Symfony, Next.js, the scheduler code, the browser worker, and the initial bootstrap data are contained in the versioned images.
@@ -24,7 +25,7 @@ Do not clone the application source on the server. Symfony, Next.js, the schedul
 From a checkout of this repository:
 
 ```bash
-scp deploy/compose.yml deploy/Caddyfile deploy/deploy.sh deploy/backup.sh deploy/restore.sh deploy/verify-alert-path.sh \
+scp deploy/compose.yml deploy/Caddyfile deploy/deploy.sh deploy/backup.sh deploy/restore.sh deploy/verify-alert-path.sh deploy/verify-persistence.sh \
   aissa@VM_IP:/opt/jobpilot/
 ```
 
@@ -32,7 +33,7 @@ On the VM:
 
 ```bash
 cd /opt/jobpilot
-chmod +x deploy.sh backup.sh restore.sh verify-alert-path.sh
+chmod +x deploy.sh backup.sh restore.sh verify-alert-path.sh verify-persistence.sh
 chmod 600 .env
 
 docker compose --env-file .env -f compose.yml config --quiet
@@ -41,6 +42,7 @@ docker compose --env-file .env -f compose.yml config --quiet
 For local staging, configure the server `.env` with at least:
 
 ```dotenv
+JOBPILOT_DEPLOYMENT_ENV=staging
 CADDY_SITE_ADDRESS=http://jobpilot.staging.local
 WEB_URL=http://jobpilot.staging.local
 DEFAULT_URI=http://jobpilot.staging.local
@@ -52,6 +54,23 @@ On the Mac, map the staging hostname to the VM address in `/etc/hosts`:
 ```text
 VM_IP jobpilot.staging.local
 ```
+
+## Automated V1 staging readiness
+
+The manual GitHub Actions workflow `Staging V1 readiness` turns the remaining V1 production evidence into one guarded staging run. It deploys an exact immutable SHA and can exercise persistence, backup/restore, rollback/forward recovery, and the connector alert path. It uploads a secret-free Markdown evidence artifact for the run.
+
+Configure a GitHub Environment named `staging` with these values:
+
+- variables: `STAGING_SSH_HOST`, `STAGING_SSH_USER`, optional `STAGING_SSH_PORT` (default `22`) and optional `STAGING_DEPLOY_PATH` (default `jobpilot-staging` under the SSH user's home);
+- secrets: `STAGING_SSH_PRIVATE_KEY`, pinned `STAGING_SSH_KNOWN_HOSTS`, and `STAGING_ENV_FILE` containing the complete staging `.env`.
+
+The staging env **must** contain `JOBPILOT_DEPLOYMENT_ENV=staging`. The workflow refuses operational drills without that exact marker. Production should use `JOBPILOT_DEPLOYMENT_ENV=production`.
+
+The workflow uses the repository-scoped `GITHUB_TOKEN` only long enough to pull the candidate images on staging, then logs the server out of GHCR. It never writes the token into JobPilot's `.env`.
+
+Persistence verification writes a temporary non-user-data sentinel under `/app/var/private`, force-recreates the staging containers, verifies that the private volume and PostgreSQL schema/migration state survived, then removes the sentinel. The restore and rollback switches are opt-in because they deliberately interrupt staging.
+
+A green workflow is real staging evidence only for the switches that were enabled. Alert-path completion still requires confirmation at the external disposable receiver (and signature verification when configured); the workflow records that requirement explicitly.
 
 ## Container registry
 
@@ -136,6 +155,7 @@ Record the date, environment, exact `JOBPILOT_VERSION`, receiver type (never its
 Use the same deployment files and the same `deploy.sh` command. Only server-specific `.env` values change. For a public hostname, for example:
 
 ```dotenv
+JOBPILOT_DEPLOYMENT_ENV=production
 CADDY_SITE_ADDRESS=jobpilot.example.com
 WEB_URL=https://jobpilot.example.com
 DEFAULT_URI=https://jobpilot.example.com
