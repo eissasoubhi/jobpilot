@@ -63,6 +63,7 @@ export default function ReportingPage() {
   const [applications, setApplications] = useState<Application[] | null>(null);
   const [responseLatency, setResponseLatency] = useState<TimelineLatencyReport | null>(null);
   const [applicationLatency, setApplicationLatency] = useState<TimelineLatencyReport | null>(null);
+  const [interviewLatency, setInterviewLatency] = useState<TimelineLatencyReport | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -71,12 +72,14 @@ export default function ReportingPage() {
       api<Application[]>('/applications'),
       api<TimelineLatencyReport>('/reporting/response-latency'),
       api<TimelineLatencyReport>('/reporting/application-latency'),
+      api<TimelineLatencyReport>('/reporting/interview-latency'),
     ])
-      .then(([items, responseResult, applicationResult]) => {
+      .then(([items, responseResult, applicationResult, interviewResult]) => {
         if (!active) return;
         setApplications(items);
         setResponseLatency(responseResult);
         setApplicationLatency(applicationResult);
+        setInterviewLatency(interviewResult);
         setError('');
       })
       .catch((caughtError: unknown) => {
@@ -100,7 +103,7 @@ export default function ReportingPage() {
         <Card>
           <ErrorBox message={error} />
         </Card>
-      ) : summary === null || responseLatency === null || applicationLatency === null ? (
+      ) : summary === null || responseLatency === null || applicationLatency === null || interviewLatency === null ? (
         <ReportingSkeleton />
       ) : summary.total === 0 ? (
         <Card><Empty>Aucune candidature n’est disponible pour calculer les indicateurs.</Empty></Card>
@@ -149,6 +152,18 @@ export default function ReportingPage() {
                   <div className={styles.badgeCluster}>
                     <Badge tone="blue">Moyenne {formatTimelineLatency(responseLatency.averageHours)}</Badge>
                     <Badge>Médiane {formatTimelineLatency(responseLatency.medianHours)}</Badge>
+                  </div>
+                </div>
+              </DataListItem>
+              <DataListItem>
+                <div className={styles.sourceRow}>
+                  <div>
+                    <strong className={styles.sourceName}>Candidature → premier entretien</strong>
+                    <div>{timelineLatencyEvidence(interviewLatency)}</div>
+                  </div>
+                  <div className={styles.badgeCluster}>
+                    <Badge tone="blue">Moyenne {formatTimelineLatency(interviewLatency.averageHours)}</Badge>
+                    <Badge>Médiane {formatTimelineLatency(interviewLatency.medianHours)}</Badge>
                   </div>
                 </div>
               </DataListItem>
