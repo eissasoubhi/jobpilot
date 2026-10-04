@@ -238,15 +238,24 @@ Rendre le workflow rapide, calme, évident et cohérent.
 
 Rendre V1 exploitable quotidiennement avec une qualité de production.
 
-### Plan d’action
+### Déjà livré
 
-1. images Docker immuables ;
-2. stockage persistant et sauvegardes testées ;
-3. gestion sûre des secrets et jetons OAuth ;
-4. observabilité des synchronisations et traitements asynchrones ;
-5. procédures de restauration et d’incident ;
-6. qualité CI : lint, type-check, unit, intégration, E2E, migrations et Compose ;
-7. accessibilité et performance mesurées sur les parcours principaux.
+- images Docker immuables et gates de build de déploiement ;
+- sauvegarde/restauration automatisée sur base jetable et procédures opérationnelles ;
+- gestion sûre des secrets et jetons OAuth ;
+- observabilité des synchronisations et traitements asynchrones ;
+- procédures de restauration, rollback et incident ;
+- qualité CI couvrant backend, frontend/typecheck/unit/build/Storybook, Compose, Chromium E2E et images requises ;
+- mesures automatisées d’accessibilité et de performance sur les parcours principaux ;
+- workflow gardé `Staging V1 readiness` pour produire les preuves opérationnelles réelles sans simuler un succès.
+
+### Preuves de sortie encore requises
+
+- exécuter avec succès le workflow sur un vrai environnement `staging` configuré et conserver les preuves exact-SHA de déploiement/health, persistance, backup/restore, rollback puis forward recovery ;
+- confirmer la réception d’une alerte fraîche sur un endpoint HTTPS jetable contrôlé ;
+- reporter ces résultats dans `docs/product/v1-production-readiness.md`.
+
+La présence des scripts, workflows et runbooks ne vaut pas preuve d’exécution réelle.
 
 ## Architecture frontend V1
 
