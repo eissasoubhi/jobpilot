@@ -130,6 +130,49 @@ final class ApplicationTimelineApiTest extends WebTestCase
         self::assertCount(1, $eventsAfterRepeatedPatch);
     }
 
+    public function testManualOutcomeTransitionsCreateBusinessEventsWithoutDuplicates(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $em);
+
+        $job = $this->job('Timeline outcomes');
+        $application = new Application($job);
+        $em->persist($job);
+        $em->persist($application);
+        $em->flush();
+
+        $applicationId = $application->getId();
+        self::assertIsInt($applicationId);
+
+        foreach ([
+            ['RECRUITER_REPLIED', JobTimelineEventType::RESPONSE_RECEIVED],
+            ['INTERVIEW', JobTimelineEventType::INTERVIEW],
+            ['OFFER_RECEIVED', JobTimelineEventType::OFFER_RECEIVED],
+        ] as [$status, $eventType]) {
+            $client->jsonRequest('PATCH', '/api/applications/'.$applicationId, ['status' => $status]);
+            self::assertResponseIsSuccessful();
+
+            $events = $em->getRepository(JobTimelineEvent::class)->findBy([
+                'application' => $application,
+                'type' => $eventType,
+            ]);
+            self::assertCount(1, $events);
+            self::assertSame('manual-status', $events[0]->getSource());
+            self::assertSame($status, $events[0]->getPayload()['status'] ?? null);
+
+            $client->jsonRequest('PATCH', '/api/applications/'.$applicationId, [
+                'status' => $status,
+                'message' => 'Mise à jour sans nouvelle transition.',
+            ]);
+            self::assertResponseIsSuccessful();
+            self::assertCount(1, $em->getRepository(JobTimelineEvent::class)->findBy([
+                'application' => $application,
+                'type' => $eventType,
+            ]));
+        }
+    }
+
     private function job(string $company): JobOffer
     {
         return (new JobOffer())->fill([

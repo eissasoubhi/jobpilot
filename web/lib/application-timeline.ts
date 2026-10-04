@@ -7,6 +7,7 @@ export type JobTimelineEventType =
   | 'RESPONSE_RECEIVED'
   | 'REJECTED'
   | 'INTERVIEW'
+  | 'OFFER_RECEIVED'
   | 'FOLLOW_UP';
 
 export type PersistedJobTimelineEvent = {
@@ -69,6 +70,11 @@ const eventPresentations: Record<JobTimelineEventType, EventPresentation> = {
   INTERVIEW: {
     title: 'Entretien proposé',
     description: 'Une invitation à un entretien a été reçue.',
+    tone: 'good',
+  },
+  OFFER_RECEIVED: {
+    title: 'Offre reçue',
+    description: 'Une proposition finale a été enregistrée pour cette candidature.',
     tone: 'good',
   },
   FOLLOW_UP: {
