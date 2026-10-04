@@ -12,9 +12,10 @@ La timeline V1 conserve des événements métier horodatés et append-only liés
 - `RESPONSE_RECEIVED`
 - `REJECTED`
 - `INTERVIEW`
+- `OFFER_RECEIVED`
 - `FOLLOW_UP`
 
-Les résultats finaux comme une acceptation restent hors du catalogue tant que leur statut métier n’est pas défini explicitement.
+`OFFER_RECEIVED` est maintenant le résultat final explicite correspondant au statut métier déjà existant `OFFER_RECEIVED`. Aucun autre résultat final n’est inventé sans statut métier dédié.
 
 ## Modèle
 
@@ -38,7 +39,7 @@ Le catalogue canonique produit `OFFER_IMPORTED` lorsqu’une nouvelle offre cano
 
 La préparation automatique d’une candidature produit maintenant `PREPARATION_CREATED` lors de la première création de la candidature et `PREPARATION_UPDATED` lorsqu’une préparation existante est régénérée. L’événement est ajouté par `ApplicationPreparationService` dans la même unité de travail que la préparation et utilise la source `application-preparation`. Son payload reste vide : le contenu du CV, du message et de la lettre n’est jamais dupliqué dans la timeline.
 
-La mise à jour manuelle d’une candidature vers `SUBMITTED` produit `APPLICATION_SUBMITTED` dans la même unité de travail que le changement de statut. Une nouvelle modification d’une candidature déjà `SUBMITTED` ne produit pas de doublon. L’événement utilise la date `submittedAt` comme date métier et conserve le statut précédent dans son payload.
+Une vraie transition manuelle de statut produit maintenant un événement métier dans la même unité de travail : `SUBMITTED` → `APPLICATION_SUBMITTED`, `RECRUITER_REPLIED` / `RESPONSE_RECEIVED` / `INFORMATION_REQUESTED` → `RESPONSE_RECEIVED`, `INTERVIEW` → `INTERVIEW`, `REJECTED` → `REJECTED`, et `OFFER_RECEIVED` → `OFFER_RECEIVED`. Réenregistrer le même statut ne produit aucun doublon. La soumission utilise `submittedAt` comme date métier ; les autres transitions utilisent l’instant de la transition. Le payload conserve le statut précédent et le nouveau statut.
 
 Les nouveaux messages Gmail associés à une candidature produisent maintenant un événement uniquement lorsque Doctrine observe dans la même transaction un vrai changement de statut :
 
