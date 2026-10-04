@@ -79,12 +79,11 @@ Faire de `Offres` le workspace principal et supprimer progressivement la nécess
 - décisions `Envoyée` et `Ne correspond pas` persistées sans action externe silencieuse ;
 - vues distinctes pour les offres à traiter, envoyées et ignorées.
 
-### Plan d’action restant
+### État V1
 
-1. ajouter un mécanisme `Undo` uniquement pour les transitions réellement réversibles et sûres ;
-2. conserver `Candidatures` comme fallback tant que la parité fonctionnelle complète n’est pas explicitement validée ;
-3. rediriger ou retirer `Candidatures` seulement après couverture fonctionnelle et E2E complète ;
-4. ajouter `Archiver` uniquement après définition d’un statut métier clair et de sa récupération.
+- `Undo` sûr est livré pour les transitions explicitement réversibles et couvert par Chromium E2E.
+- `Archiver` et la récupération des offres archivées sont livrés dans le workspace principal.
+- `Candidatures` reste un fallback non bloquant ; son retrait n'est pas un critère de sortie V1 tant que le workspace principal couvre les parcours quotidiens critiques.
 
 ## Epic 2 — Review Queue
 
@@ -135,14 +134,14 @@ Construire une histoire horodatée fiable pour chaque opportunité afin de débl
 - relance ;
 - acceptation ou autre résultat final lorsque les statuts correspondants sont définis.
 
-### Plan d’action
+### État V1
 
-1. définir explicitement les événements métier à conserver ;
-2. distinguer activité technique et événement métier ;
-3. persister les événements de manière append-only ;
-4. exposer une timeline par offre ;
-5. associer Gmail aux événements pertinents ;
-6. utiliser ces timestamps comme seule base des métriques temporelles.
+- événements métier explicitement séparés de l'activité technique ;
+- persistance append-only des transitions fiables ;
+- timeline exposée par opportunité ;
+- événements Gmail pertinents associés aux candidatures ;
+- transitions manuelles réponse, entretien, refus et offre reçue historisées ;
+- métriques temporelles calculées uniquement depuis ces événements fiables.
 
 ## Epic 4 — Company & Recruiter CRM
 
@@ -173,16 +172,13 @@ Transformer le reporting existant en informations actionnables basées sur des �
 - TJM et salaire proposés moyens ;
 - métriques de matching.
 
-### Plan d’action
+### État V1
 
-1. temps moyen de réponse ;
-2. temps entre découverte et candidature ;
-3. taux d’entretien par source ;
-4. efficacité des recruteurs ;
-5. tendances de rémunération ;
-6. technologies les plus demandées ;
-7. taux d’acceptation uniquement après définition d’un statut fiable ;
-8. relier chaque métrique à sa source de données et à sa définition métier.
+- temps découverte → candidature livré ;
+- temps candidature → première réponse livré ;
+- temps candidature → premier entretien livré ;
+- moyennes, médianes et nombre de paires complètes exposés sans inférer les dates depuis des statuts mutables ;
+- les métriques sans événement métier fiable, comme le taux d'acceptation, restent explicitement différées plutôt que fabriquées.
 
 ## Epic 6 — Collecte autorisée et fiable
 
