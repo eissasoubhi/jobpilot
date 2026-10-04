@@ -76,15 +76,29 @@ final class ApplicationController
         $previousStatus = $application->getStatus();
         $application->fill($request->toArray());
 
-        if ($previousStatus !== 'SUBMITTED' && $application->getStatus() === 'SUBMITTED') {
-            $this->timeline->record(
-                $application->getJobOffer(),
-                JobTimelineEventType::APPLICATION_SUBMITTED,
-                ['previousStatus' => $previousStatus],
-                $application,
-                $application->getSubmittedAt(),
-                'manual-status',
-            );
+        $nextStatus = $application->getStatus();
+        if ($previousStatus !== $nextStatus) {
+            $eventType = match ($nextStatus) {
+                'SUBMITTED' => JobTimelineEventType::APPLICATION_SUBMITTED,
+                'RECRUITER_REPLIED', 'RESPONSE_RECEIVED', 'INFORMATION_REQUESTED' => JobTimelineEventType::RESPONSE_RECEIVED,
+                'INTERVIEW' => JobTimelineEventType::INTERVIEW,
+                'REJECTED' => JobTimelineEventType::REJECTED,
+                'OFFER_RECEIVED' => JobTimelineEventType::OFFER_RECEIVED,
+                default => null,
+            };
+
+            if ($eventType !== null) {
+                $this->timeline->record(
+                    $application->getJobOffer(),
+                    $eventType,
+                    ['previousStatus' => $previousStatus, 'status' => $nextStatus],
+                    $application,
+                    $eventType === JobTimelineEventType::APPLICATION_SUBMITTED
+                        ? $application->getSubmittedAt()
+                        : null,
+                    'manual-status',
+                );
+            }
         }
 
         $this->em->flush();
