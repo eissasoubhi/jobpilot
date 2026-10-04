@@ -38,6 +38,27 @@ describe('presentJobTimeline', () => {
     });
   });
 
+  it('presents a persisted final offer outcome', () => {
+    const events = presentJobTimeline([
+      {
+        id: 16,
+        jobOfferId: 30,
+        applicationId: 12,
+        type: 'OFFER_RECEIVED',
+        source: 'manual-status',
+        payload: { previousStatus: 'INTERVIEW', status: 'OFFER_RECEIVED' },
+        occurredAt: '2026-08-06T15:00:00+00:00',
+        recordedAt: '2026-08-06T15:00:01+00:00',
+      },
+    ]);
+
+    expect(events[0]).toMatchObject({
+      title: 'Offre reçue',
+      tone: 'good',
+      description: 'Une proposition finale a été enregistrée pour cette candidature.',
+    });
+  });
+
   it('does not invent events when the persistent timeline is empty', () => {
     expect(presentJobTimeline([])).toEqual([]);
   });
