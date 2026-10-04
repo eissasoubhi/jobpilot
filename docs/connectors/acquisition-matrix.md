@@ -37,6 +37,18 @@ L’absence de connexion requise rend une plateforme **candidate techniquement**
 
 L’objectif est qu’aucune plateforme ne reste durablement dans un état vague. Toute source `UNDER_REVIEW` doit progressivement obtenir une décision de collecte explicite. Lorsqu’un scraper est autorisé, il doit être implémenté **une plateforme par PR** avec fixtures locales et sans dépendre du site réel dans la CI.
 
+## Clôture de l’audit V1
+
+La revue V1 est **complète depuis le 17 septembre 2026** : aucune plateforme de la matrice n’est encore en `UNDER_REVIEW`.
+
+Chaque entrée possède maintenant une décision explicite dans le catalogue synchronisé `docs/connectors/roadmap-catalog.md` :
+
+- `OPERATIONAL` lorsqu’un connecteur gouverné est réellement exécutable ;
+- `PLANNED` lorsqu’un canal officiel est identifié mais dépend encore d’un accès, d’un accord ou d’une implémentation ;
+- `EMAIL_OR_EXTENSION_ONLY` lorsque la collecte planifiée n’est pas autorisée ou qu’aucun canal de réutilisation automatisée n’est confirmé.
+
+Le test `web/tests/unit/connector-roadmap.test.ts` verrouille désormais cette règle : réintroduire une entrée V1 indécise fait échouer la suite frontend. Les futures plateformes peuvent temporairement utiliser `UNDER_REVIEW`, mais une source de la matrice V1 ne peut pas revenir silencieusement dans cet état.
+
 ## Statuts
 
 ### `OPERATIONAL`
@@ -210,7 +222,7 @@ Cette décision ne pourra être réouverte qu’après autorisation écrite Figa
 
 ### `UNDER_REVIEW`
 
-Aucun canal réutilisable n’est encore confirmé. La source reste visible pour éviter qu’elle soit oubliée, mais aucune collecte planifiée ne doit être déclenchée.
+État de sécurité disponible pour une future source nouvellement évaluée, mais **aucune entrée de la matrice V1 n’est actuellement dans cet état**. Tant qu’une revue n’est pas terminée, aucune collecte planifiée ne doit être déclenchée.
 
 La revue doit vérifier au minimum :
 
