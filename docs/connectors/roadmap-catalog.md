@@ -11,6 +11,8 @@ The table below is covered by a parity test. Any change to a source code, status
 - `OPERATIONAL`: the connector is registered in the backend and can run when its required configuration is present.
 - `PLANNED`: an authorized technical channel is identified, but implementation or required access is still pending.
 - `UNDER_REVIEW`: scheduled collection remains blocked until the source-specific technical and compliance review is complete.
+
+The V1 catalog currently contains **zero** `UNDER_REVIEW` entries. This is intentional and protected by a frontend parity/regression test; every listed V1 platform has an explicit acquisition decision.
 - `EMAIL_OR_EXTENSION_ONLY`: JobPilot may use recognized Gmail alerts or a user-triggered browser import, but must not automate login or background scraping.
 
 ## Current roadmap
