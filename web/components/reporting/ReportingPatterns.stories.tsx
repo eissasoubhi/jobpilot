@@ -48,6 +48,27 @@ export const ReportingOverview: Story = {
       </div>
 
       <Card>
+        <h2 className="section-title">Délais issus de la timeline</h2>
+        <DataList aria-label="Délais calculés depuis les événements métier">
+          {[
+            ['Découverte → candidature', 'Moyenne 1,8 j', 'Médiane 1,2 j'],
+            ['Candidature → première réponse', 'Moyenne 3,4 j', 'Médiane 2,1 j'],
+            ['Candidature → premier entretien', 'Moyenne 6,2 j', 'Médiane 5 j'],
+          ].map(([label, average, median]) => (
+            <DataListItem key={label}>
+              <div className={styles.sourceRow}>
+                <strong className={styles.sourceName}>{label}</strong>
+                <div className={styles.badgeCluster}>
+                  <Badge tone="blue">{average}</Badge>
+                  <Badge>{median}</Badge>
+                </div>
+              </div>
+            </DataListItem>
+          ))}
+        </DataList>
+      </Card>
+
+      <Card>
         <h2 className="section-title">Conversion par source</h2>
         <DataList aria-label="Conversion des candidatures par source" className={styles.sourceList}>
           {sources.map((row) => (
