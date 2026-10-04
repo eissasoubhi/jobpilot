@@ -186,6 +186,12 @@ Transformer le reporting existant en informations actionnables basées sur des �
 
 ## Epic 6 — Collecte autorisée et fiable
 
+### État V1
+
+La matrice d’acquisition V1 est désormais entièrement décidée : **aucune source ne reste `UNDER_REVIEW`**. Les sources automatisables déjà livrées restent gouvernées par leurs politiques ; les canaux officiels nécessitant encore un partenariat ou des credentials restent `PLANNED` ; les autres sources restent explicitement limitées à Gmail/import assisté lorsque la collecte planifiée n’est pas autorisée ou pas suffisamment établie.
+
+Cette clôture de la matrice ne transforme pas les canaux `PLANNED` en connecteurs opérationnels et ne contourne aucun accord partenaire. Pour la sortie V1, le critère « chaque plateforme possède un connecteur exploitable ou une raison documentée de ne pas automatiser » est satisfait.
+
 ### Objectif
 
 Ne jamais rater une opportunité sur les sources configurées et **exploiter systématiquement les job boards publics accessibles sans authentification lorsque la collecte automatisée y est autorisée**.
@@ -193,6 +199,8 @@ Ne jamais rater une opportunité sur les sources configurées et **exploiter sys
 La priorité produit n’est plus limitée aux API. Un site qui expose publiquement ses offres doit être évalué explicitement comme candidat au scraping HTTP ou navigateur. En revanche, l’absence de login ne suffit pas à autoriser la réutilisation automatisée : robots, CGU, restrictions d’extraction et limites techniques restent des garde-fous obligatoires.
 
 ### Plan d’action prioritaire
+
+Les points 1, 2, 7 et 10 sont **clos pour la matrice V1** : toutes les plateformes listées ont été revues et possèdent une décision explicite. Les points 3 à 6 restent les règles d’implémentation des futurs canaux autorisés, en particulier des sources `PLANNED` lorsque les accords, spécifications et accès requis seront réellement obtenus. Les points 8 et 9 restent des garde-fous permanents ; ils ne constituent pas un manque à contourner pour déclarer la V1.
 
 1. auditer **toutes les plateformes de la matrice d’acquisition**, pas seulement quelques sources pilotes ;
 2. pour chaque source, vérifier l’existence d’une liste d’offres publique accessible sans session et enregistrer la date de cette revue ;
