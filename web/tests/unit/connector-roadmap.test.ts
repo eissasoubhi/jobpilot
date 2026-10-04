@@ -87,6 +87,14 @@ describe('platform acquisition matrix', () => {
     ))).toBe(true);
   });
 
+  it('has no unresolved acquisition decision in the V1 matrix', () => {
+    const unresolved = connectorRoadmap.filter((connector) => connector.status === 'UNDER_REVIEW');
+
+    expect(unresolved).toEqual([]);
+    expect(connectorRoadmap.every((connector) => connector.note.trim().length > 0)).toBe(true);
+    expect(connectorRoadmap.every((connector) => connector.nextStep.trim().length > 0)).toBe(true);
+  });
+
   it('marks registered API connectors as operational', () => {
     for (const code of ['adzuna', 'france-travail', 'smartrecruiters']) {
       const connector = connectorRoadmap.find((entry) => entry.code === code);
