@@ -14,6 +14,7 @@ final class JobTimelineEventType
     public const RESPONSE_RECEIVED = 'RESPONSE_RECEIVED';
     public const REJECTED = 'REJECTED';
     public const INTERVIEW = 'INTERVIEW';
+    public const OFFER_RECEIVED = 'OFFER_RECEIVED';
     public const FOLLOW_UP = 'FOLLOW_UP';
 
     /** @return list<string> */
@@ -28,6 +29,7 @@ final class JobTimelineEventType
             self::RESPONSE_RECEIVED,
             self::REJECTED,
             self::INTERVIEW,
+            self::OFFER_RECEIVED,
             self::FOLLOW_UP,
         ];
     }
